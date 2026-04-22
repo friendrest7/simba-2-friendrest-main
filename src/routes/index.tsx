@@ -125,7 +125,7 @@ function LandingHero() {
   return (
     <section className="relative min-h-[84vh] overflow-hidden text-white">
       <video
-        src="/amazon-fresh-hero.mp4"
+        src="/simba-landing-hero.mp4"
         autoPlay
         muted
         loop
