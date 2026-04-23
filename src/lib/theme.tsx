@@ -1,14 +1,29 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 export type Mode = "light" | "dark";
-export type Accent = "purple" | "emerald" | "sunset" | "ocean" | "rose";
+export type Accent =
+  | "purple"
+  | "emerald"
+  | "sunset"
+  | "ocean"
+  | "rose"
+  | "simba"
+  | "gold"
+  | "teal"
+  | "indigo"
+  | "slate";
 
 export const ACCENTS: { id: Accent; label: string; swatch: string }[] = [
+  { id: "simba", label: "Simba Red", swatch: "oklch(0.62 0.23 29)" },
   { id: "purple", label: "Royal Purple", swatch: "oklch(0.45 0.22 295)" },
   { id: "emerald", label: "Emerald", swatch: "oklch(0.55 0.18 155)" },
   { id: "sunset", label: "Sunset", swatch: "oklch(0.62 0.22 35)" },
   { id: "ocean", label: "Ocean", swatch: "oklch(0.55 0.16 230)" },
   { id: "rose", label: "Rose", swatch: "oklch(0.6 0.22 5)" },
+  { id: "gold", label: "Market Gold", swatch: "oklch(0.74 0.17 78)" },
+  { id: "teal", label: "Fresh Teal", swatch: "oklch(0.56 0.15 190)" },
+  { id: "indigo", label: "Deep Indigo", swatch: "oklch(0.48 0.2 270)" },
+  { id: "slate", label: "Executive Slate", swatch: "oklch(0.42 0.06 245)" },
 ];
 
 const Ctx = createContext<{

@@ -29,21 +29,23 @@ type SignUpInput = {
   password: string;
 };
 
+type AuthResult = { ok: true; user: SessionUser | null } | { ok: false; error: string };
+
 const Ctx = createContext<{
   user: SessionUser | null;
   hydrated: boolean;
-  signIn: (input: SignInInput) => Promise<{ ok: true } | { ok: false; error: string }>;
-  signUp: (input: SignUpInput) => Promise<{ ok: true } | { ok: false; error: string }>;
+  signIn: (input: SignInInput) => Promise<AuthResult>;
+  signUp: (input: SignUpInput) => Promise<AuthResult>;
   signInWithGoogle: (input: {
     email: string;
     name: string;
     googleSubject: string;
-  }) => Promise<{ ok: true } | { ok: false; error: string }>;
+  }) => Promise<AuthResult>;
   signInWithFacebook: (input: {
     email: string;
     name: string;
     facebookSubject: string;
-  }) => Promise<{ ok: true } | { ok: false; error: string }>;
+  }) => Promise<AuthResult>;
   signOut: () => Promise<void>;
 } | null>(null);
 
@@ -56,14 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return sessionUser;
     }
 
-    await upsertProfile({
-      userId: sessionUser.id,
-      fullName: sessionUser.name,
-      phone: sessionUser.phone,
-    });
-
     const profile = await getProfile(sessionUser.id);
     if (!profile) {
+      await upsertProfile({
+        userId: sessionUser.id,
+        fullName: sessionUser.name,
+        phone: sessionUser.phone,
+      });
       return sessionUser;
     }
 
@@ -117,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const nextUser = await syncSupabaseProfile(await getSupabaseSessionUser());
       setUser(nextUser);
-      return { ok: true as const };
+      return { ok: true as const, user: nextUser };
     }
 
     const result = authenticateUser(input);
@@ -126,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setUser(result.user);
-    return { ok: true as const };
+    return { ok: true as const, user: result.user };
   };
 
   const signUp = async (input: SignUpInput) => {
@@ -149,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const nextUser = await syncSupabaseProfile(await getSupabaseSessionUser());
       setUser(nextUser);
-      return { ok: true as const };
+      return { ok: true as const, user: nextUser };
     }
 
     const result = registerCustomer(input);
@@ -158,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setUser(result.user);
-    return { ok: true as const };
+    return { ok: true as const, user: result.user };
   };
 
   const signInWithGoogle = async (input: {
@@ -172,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setUser(result.user);
-    return { ok: true as const };
+    return { ok: true as const, user: result.user };
   };
 
   const signInWithFacebook = async (input: {
@@ -191,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setUser(result.user);
-    return { ok: true as const };
+    return { ok: true as const, user: result.user };
   };
 
   const signOut = async () => {

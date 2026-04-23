@@ -7,35 +7,47 @@ import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { getSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase";
 import { useEffect, useRef, useState } from "react";
-import { LockKeyhole, Mail, Sparkles, UserRound } from "lucide-react";
+import { LockKeyhole, Mail, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import type { SessionUser } from "@/lib/demo-store";
 
-type SignInSearch = { redirect?: string };
+type SignInSearch = { redirect?: string; intent?: AuthIntent };
 type AuthTab = "signin" | "signup";
+type AuthIntent = "client" | "admin";
+
+const AUTH_INTENT_KEY = "simba.auth.intent";
+const GOOGLE_CLIENT_ID = "161152739016-5gel5ehmvtnqv6amdpoos1n3l2259bhh.apps.googleusercontent.com";
 
 export const Route = createFileRoute("/signin")({
   component: SignInPage,
   validateSearch: (s: Record<string, unknown>): SignInSearch => ({
     redirect: typeof s.redirect === "string" ? s.redirect : undefined,
+    intent: s.intent === "admin" || s.intent === "client" ? s.intent : undefined,
   }),
   head: () => ({ meta: [{ title: "Sign in - Simba Supermarket" }] }),
 });
 
 function SignInPage() {
   const { t } = useI18n();
-  const { user, hydrated, signIn, signUp, signInWithGoogle, signInWithFacebook } = useAuth();
+  const { user, hydrated, signIn, signUp, signInWithGoogle, signInWithFacebook, signOut } = useAuth();
   const navigate = useNavigate();
-  const { redirect } = useSearch({ from: "/signin" }) as SignInSearch;
+  const { redirect, intent } = useSearch({ from: "/signin" }) as SignInSearch;
   const [authError, setAuthError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<AuthTab>("signin");
+  const [authIntent, setAuthIntent] = useState<AuthIntent>("client");
   const [signInData, setSignInData] = useState({ credential: "", password: "" });
   const [signUpData, setSignUpData] = useState({ name: "", email: "", phone: "", password: "" });
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const [googleLoaded, setGoogleLoaded] = useState(false);
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID;
   const facebookAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
 
-  const goNext = () => {
-    navigate({ to: (redirect as "/checkout") || "/" });
+  const isAdminIntent = authIntent === "admin";
+
+  const dashboardFor = (sessionUser: SessionUser | null) =>
+    sessionUser?.role === "manager" || sessionUser?.role === "staff" ? "/admin-dashboard" : "/client-dashboard";
+
+  const goNext = (sessionUser: SessionUser | null) => {
+    navigate({ to: (redirect as "/checkout") || (dashboardFor(sessionUser) as "/client-dashboard") });
   };
 
   const switchAuthTab = (nextTab: AuthTab) => {
@@ -43,9 +55,28 @@ function SignInPage() {
     setActiveTab(nextTab);
   };
 
+  const validateIntentAndRoute = async (sessionUser: SessionUser | null, intent: AuthIntent) => {
+    if (intent === "admin" && sessionUser?.role !== "manager" && sessionUser?.role !== "staff") {
+      await signOut();
+      setAuthError(t("auth.adminRequired"));
+      return;
+    }
+
+    window.localStorage.removeItem(AUTH_INTENT_KEY);
+    setAuthError(null);
+    goNext(sessionUser);
+  };
+
+  useEffect(() => {
+    if (intent) {
+      setAuthIntent(intent);
+    }
+  }, [intent]);
+
   useEffect(() => {
     if (hydrated && user) {
-      goNext();
+      const storedIntent = (window.localStorage.getItem(AUTH_INTENT_KEY) as AuthIntent | null) ?? authIntent;
+      void validateIntentAndRoute(user, storedIntent);
     }
   }, [hydrated, user]);
 
@@ -70,6 +101,7 @@ function SignInPage() {
           void (async () => {
             try {
               if (supabase) {
+                window.localStorage.setItem(AUTH_INTENT_KEY, authIntent);
                 const { error } = await supabase.auth.signInWithIdToken({
                   provider: "google",
                   token: response.credential ?? "",
@@ -81,7 +113,6 @@ function SignInPage() {
                 }
 
                 setAuthError(null);
-                goNext();
                 return;
               }
 
@@ -98,7 +129,7 @@ function SignInPage() {
               }
 
               setAuthError(null);
-              goNext();
+              await validateIntentAndRoute(result.user, authIntent);
             } catch {
               setAuthError(t("auth.googleFailed"));
             }
@@ -152,7 +183,7 @@ function SignInPage() {
       setAuthError(result.error.includes("auth.") ? t(result.error) : result.error);
       return;
     }
-    goNext();
+    await validateIntentAndRoute(result.user, authIntent);
   };
 
   const submitSignUp = async (e: React.FormEvent) => {
@@ -167,7 +198,7 @@ function SignInPage() {
       setAuthError(t("auth.supabaseEmailConfirm"));
       return;
     }
-    goNext();
+    await validateIntentAndRoute(result.user, "client");
   };
 
   const signInWithFacebookProvider = async () => {
@@ -175,6 +206,7 @@ function SignInPage() {
     const supabase = getSupabaseBrowserClient();
 
     if (supabase) {
+      window.localStorage.setItem(AUTH_INTENT_KEY, authIntent);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "facebook",
         options: {
@@ -220,7 +252,7 @@ function SignInPage() {
                 return;
               }
 
-              goNext();
+              await validateIntentAndRoute(result.user, authIntent);
             })();
           });
         },
@@ -307,6 +339,26 @@ function SignInPage() {
                     {t("signin.or")}
                   </span>
                   <div className="h-px flex-1 bg-border" />
+                </div>
+
+                <div className="rounded-2xl border border-border bg-background p-3">
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isAdminIntent}
+                      onChange={(e) => setAuthIntent(e.target.checked ? "admin" : "client")}
+                      className="mt-1 h-4 w-4 rounded border-input accent-primary"
+                    />
+                    <span>
+                      <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+                        <ShieldCheck className="h-4 w-4 text-primary" />
+                        {t("auth.signInAsAdmin")}
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                        {t("auth.adminHint")}
+                      </span>
+                    </span>
+                  </label>
                 </div>
 
                 <div>

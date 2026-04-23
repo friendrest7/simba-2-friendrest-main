@@ -22,10 +22,10 @@ import {
   Search,
   ShoppingBag,
   Sun,
-  Timer,
   User as UserIcon,
 } from "lucide-react";
 import { useState } from "react";
+import cartIcon from "@/assets/cart-icon.png";
 
 const KIGALI_MAP_URL =
   "https://www.google.com/maps/search/?api=1&query=Simba+Supermarket+Kigali+Rwanda";
@@ -47,28 +47,10 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/94 backdrop-blur supports-[backdrop-filter]:bg-background/88">
-      <div className="border-b border-border/60 bg-[linear-gradient(90deg,color-mix(in_oklab,var(--brand-yellow)_92%,white)_0%,var(--brand-yellow)_100%)]">
-        <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4 text-[11px] font-bold uppercase tracking-[0.16em] text-black/85">
-          <div className="flex items-center gap-2">
-            <Timer className="h-3.5 w-3.5" />
-            <span>{t("ui.fastDeliveryBanner")}</span>
-          </div>
-          <a
-            href={KIGALI_MAP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden items-center gap-1 md:inline-flex"
-          >
-            <MapPin className="h-3.5 w-3.5" />
-            {selectedBranch}, Rwanda
-          </a>
-        </div>
-      </div>
-
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 md:gap-4">
         <Link to="/" className="flex shrink-0 items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-lg font-black text-primary-foreground shadow-md shadow-primary/20">
-            S
+          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-border/70 bg-white p-1.5 shadow-md shadow-primary/20">
+            <img src={cartIcon} alt="Simba" className="h-full w-full object-contain" />
           </div>
           <div className="hidden min-w-0 sm:block">
             <div className="text-base font-black tracking-tight text-foreground">Simba</div>
@@ -105,6 +87,15 @@ export function Header() {
             ))}
           </select>
         </label>
+
+        <a
+          href={KIGALI_MAP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden rounded-full bg-primary/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-primary transition hover:bg-primary hover:text-primary-foreground xl:inline-flex"
+        >
+          {t("ui.fastDeliveryBanner")}
+        </a>
 
         <div className="hidden items-center gap-1 lg:flex">
           <Button
@@ -185,9 +176,14 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to={user.role === "manager" || user.role === "staff" ? "/admin-dashboard" : "/client-dashboard"}>
+                  {user.role === "manager" || user.role === "staff" ? t("admin.dashboard") : t("client.dashboard")}
+                </Link>
+              </DropdownMenuItem>
               {(user.role === "manager" || user.role === "staff") && (
                 <DropdownMenuItem asChild>
-                  <Link to="/branch-dashboard">{t("app.dashboard")}</Link>
+                  <Link to="/admin-dashboard">{t("app.dashboard")}</Link>
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
@@ -247,7 +243,7 @@ export function Header() {
           </select>
           {(user?.role === "manager" || user?.role === "staff") && (
             <Button asChild variant="outline" size="sm" className="rounded-xl">
-              <Link to="/branch-dashboard">{t("app.dashboard")}</Link>
+              <Link to="/admin-dashboard">{t("app.dashboard")}</Link>
             </Button>
           )}
         </div>

@@ -22,7 +22,7 @@ export const Route = createFileRoute("/branch-dashboard")({
   head: () => ({ meta: [{ title: "Branch dashboard - Simba Supermarket" }] }),
 });
 
-function BranchDashboardPage() {
+export default function BranchDashboardPage() {
   const { user } = useAuth();
   const { t } = useI18n();
   const [refreshKey, setRefreshKey] = useState(0);
@@ -76,7 +76,7 @@ function BranchDashboardPage() {
   };
 
   if (!user) {
-    return <Navigate to="/signin" search={{ redirect: "/branch-dashboard" } as never} />;
+    return <Navigate to="/signin" search={{ redirect: "/admin-dashboard" } as never} />;
   }
 
   if (!isAllowed) {

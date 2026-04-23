@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as ProductsRouteImport } from './routes/products'
+import { Route as ClientDashboardRouteImport } from './routes/client-dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as BranchDashboardRouteImport } from './routes/branch-dashboard'
+import { Route as AdminDashboardRouteImport } from './routes/admin-dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
@@ -26,6 +28,11 @@ const SigninRoute = SigninRouteImport.update({
 const ProductsRoute = ProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientDashboardRoute = ClientDashboardRouteImport.update({
+  id: '/client-dashboard',
+  path: '/client-dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -41,6 +48,11 @@ const CartRoute = CartRouteImport.update({
 const BranchDashboardRoute = BranchDashboardRouteImport.update({
   id: '/branch-dashboard',
   path: '/branch-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin-dashboard',
+  path: '/admin-dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -61,9 +73,11 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin-dashboard': typeof AdminDashboardRoute
   '/branch-dashboard': typeof BranchDashboardRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/client-dashboard': typeof ClientDashboardRoute
   '/products': typeof ProductsRoute
   '/signin': typeof SigninRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -71,9 +85,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin-dashboard': typeof AdminDashboardRoute
   '/branch-dashboard': typeof BranchDashboardRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/client-dashboard': typeof ClientDashboardRoute
   '/products': typeof ProductsRoute
   '/signin': typeof SigninRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -82,9 +98,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin-dashboard': typeof AdminDashboardRoute
   '/branch-dashboard': typeof BranchDashboardRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
+  '/client-dashboard': typeof ClientDashboardRoute
   '/products': typeof ProductsRoute
   '/signin': typeof SigninRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -94,9 +112,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin-dashboard'
     | '/branch-dashboard'
     | '/cart'
     | '/checkout'
+    | '/client-dashboard'
     | '/products'
     | '/signin'
     | '/category/$slug'
@@ -104,9 +124,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin-dashboard'
     | '/branch-dashboard'
     | '/cart'
     | '/checkout'
+    | '/client-dashboard'
     | '/products'
     | '/signin'
     | '/category/$slug'
@@ -114,9 +136,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin-dashboard'
     | '/branch-dashboard'
     | '/cart'
     | '/checkout'
+    | '/client-dashboard'
     | '/products'
     | '/signin'
     | '/category/$slug'
@@ -125,9 +149,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
   BranchDashboardRoute: typeof BranchDashboardRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
+  ClientDashboardRoute: typeof ClientDashboardRoute
   ProductsRoute: typeof ProductsRoute
   SigninRoute: typeof SigninRoute
   CategorySlugRoute: typeof CategorySlugRoute
@@ -150,6 +176,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/client-dashboard': {
+      id: '/client-dashboard'
+      path: '/client-dashboard'
+      fullPath: '/client-dashboard'
+      preLoaderRoute: typeof ClientDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout': {
       id: '/checkout'
       path: '/checkout'
@@ -169,6 +202,13 @@ declare module '@tanstack/react-router' {
       path: '/branch-dashboard'
       fullPath: '/branch-dashboard'
       preLoaderRoute: typeof BranchDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-dashboard': {
+      id: '/admin-dashboard'
+      path: '/admin-dashboard'
+      fullPath: '/admin-dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -197,9 +237,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
   BranchDashboardRoute: BranchDashboardRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
+  ClientDashboardRoute: ClientDashboardRoute,
   ProductsRoute: ProductsRoute,
   SigninRoute: SigninRoute,
   CategorySlugRoute: CategorySlugRoute,

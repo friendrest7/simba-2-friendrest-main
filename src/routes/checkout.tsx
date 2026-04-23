@@ -142,7 +142,7 @@ function CheckoutPage() {
           </Button>
           {(user.role === "manager" || user.role === "staff") && (
             <Button asChild variant="outline" size="lg" className="rounded-full">
-              <Link to="/branch-dashboard">{t("app.dashboard")}</Link>
+              <Link to="/admin-dashboard">{t("app.dashboard")}</Link>
             </Button>
           )}
         </div>

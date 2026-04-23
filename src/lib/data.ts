@@ -7,6 +7,7 @@ import {
   getBranchStock as getLocalBranchStock,
   getDashboardSummary as getLocalDashboardSummary,
   getOrdersForBranches as getLocalOrdersForBranches,
+  getOrdersForUser as getLocalOrdersForUser,
   updateBranchStock as updateLocalBranchStock,
   updateOrderStatus as updateLocalOrderStatus,
   type BranchName,
@@ -413,6 +414,68 @@ export async function getOrdersForBranches(branches: BranchName[]): Promise<Orde
       )
     `)
     .in("branch_name", branches)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return (data ?? []).map((order) => ({
+    id: order.order_number,
+    branch: asBranchName(order.branch_name),
+    pickupDate: order.pickup_date,
+    pickupSlot: order.pickup_slot,
+    paymentMethod: order.payment_method as PaymentMethod,
+    paymentPhone: order.payment_phone ?? undefined,
+    notes: order.notes ?? undefined,
+    customerId: order.customer_id,
+    customerName: order.customer_name,
+    customerEmail: order.customer_email,
+    customerPhone: order.customer_phone,
+    items: (order.order_items ?? []).map((item: any) => ({
+      productId: item.product_id,
+      name: item.product_name,
+      price: Number(item.unit_price),
+      quantity: item.quantity,
+    })),
+    subtotal: Number(order.subtotal),
+    total: Number(order.total),
+    status: order.status as OrderStatus,
+    createdAt: order.created_at,
+  }));
+}
+
+export async function getOrdersForUser(user: SessionUser): Promise<OrderRecord[]> {
+  if (!hasSupabaseConfig()) {
+    return getLocalOrdersForUser(user);
+  }
+
+  const supabase = requireSupabase();
+  const { data, error } = await supabase
+    .from("orders")
+    .select(`
+      id,
+      order_number,
+      customer_id,
+      customer_name,
+      customer_email,
+      branch_name,
+      pickup_date,
+      pickup_slot,
+      payment_method,
+      payment_phone,
+      customer_phone,
+      notes,
+      subtotal,
+      total,
+      status,
+      created_at,
+      order_items (
+        product_id,
+        product_name,
+        unit_price,
+        quantity
+      )
+    `)
+    .eq("customer_id", user.id)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
