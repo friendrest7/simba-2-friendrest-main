@@ -9,6 +9,7 @@ import { useCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n";
 import { conversationalSearch, getBranchReviewSummary, PICKUP_BRANCHES, type BranchName } from "@/lib/demo-store";
 import { formatSearchExplanation } from "@/lib/search-explanation";
+import { getBranchMapUrl } from "@/lib/branchLocations";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -30,15 +31,20 @@ function HomePage() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
 
-  const featuredResults = useMemo(
-    () => conversationalSearch(q || t("search.defaultTerms"), selectedBranch).products.slice(0, 10),
+  const featuredSearch = useMemo(
+    () => conversationalSearch(q || t("search.defaultTerms"), selectedBranch),
     [q, selectedBranch, t],
   );
 
-  const heroSearchExplanation = useMemo(
-    () => formatSearchExplanation(conversationalSearch(q || t("search.defaultTerms"), selectedBranch), t),
-    [q, selectedBranch, t],
-  );
+  const featuredResults = featuredSearch.products.slice(0, 10);
+  const heroSearchExplanation = useMemo(() => formatSearchExplanation(featuredSearch, t), [featuredSearch, t]);
+
+  const openBranchMap = (branch: BranchName) => {
+    setSelectedBranch(branch);
+    if (window.confirm(`Open ${branch} branch in Google Maps?`)) {
+      window.open(getBranchMapUrl(branch), "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
     <div className="pb-24">
@@ -135,9 +141,9 @@ function HomePage() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <TrustStat label={t("dashboard.orderCount")} value="Real" helper={t("home.trust1")} />
-              <TrustStat label={t("pickup.branchStock")} value="Live" helper={t("home.trust2")} />
-              <TrustStat label={t("app.dashboard")} value="Staff" helper={t("home.trust3")} />
+              <TrustStat label={t("dashboard.orderCount")} value="nyabyo" helper={t("home.trust1")} />
+              <TrustStat label={t("pickup.branchStock")} value="bihari" helper={t("home.trust2")} />
+              <TrustStat label={t("app.dashboard")} value="abakozi" helper={t("home.trust3")} />
             </div>
           </div>
         </div>
@@ -161,7 +167,7 @@ function HomePage() {
                 <button
                   key={branch}
                   type="button"
-                  onClick={() => setSelectedBranch(branch)}
+                  onClick={() => openBranchMap(branch)}
                   className={`rounded-[1.5rem] border p-4 text-left transition ${active ? "border-primary bg-primary/6 shadow-md" : "border-border bg-background hover:border-primary/30"}`}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -170,7 +176,7 @@ function HomePage() {
                   </div>
                   <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock3 className="h-4 w-4" />
-                    {summary.count > 0 ? `${summary.average.toFixed(1)} / 5` : "New branch"}
+                    {summary.count > 0 ? `${summary.average.toFixed(1)} / 5` : "ishami rishya"}
                   </div>
                 </button>
               );

@@ -29,6 +29,7 @@ export function ProductCard({ product }: { product: Product }) {
             src={product.image}
             alt={product.name}
             loading="lazy"
+            decoding="async"
             onError={() => setImgError(true)}
             className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
           />

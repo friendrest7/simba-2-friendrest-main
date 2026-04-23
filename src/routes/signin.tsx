@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
+import { getAuthConfig, warnUnconfiguredAuthProviders } from "@/lib/authConfig";
 import { useI18n } from "@/lib/i18n";
 import { getSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase";
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +16,6 @@ type AuthTab = "signin" | "signup";
 type AuthIntent = "client" | "admin";
 
 const AUTH_INTENT_KEY = "simba.auth.intent";
-const GOOGLE_CLIENT_ID = "161152739016-5gel5ehmvtnqv6amdpoos1n3l2259bhh.apps.googleusercontent.com";
 
 export const Route = createFileRoute("/signin")({
   component: SignInPage,
@@ -38,8 +38,11 @@ function SignInPage() {
   const [signUpData, setSignUpData] = useState({ name: "", email: "", phone: "", password: "" });
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const [googleLoaded, setGoogleLoaded] = useState(false);
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID;
-  const facebookAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
+  const authConfig = getAuthConfig();
+  const emailProvider = authConfig.providers.email;
+  const googleProvider = authConfig.providers.google;
+  const facebookProvider = authConfig.providers.facebook;
+  const hasSocialAuth = googleProvider.enabled || facebookProvider.enabled;
 
   const isAdminIntent = authIntent === "admin";
 
@@ -74,6 +77,10 @@ function SignInPage() {
   }, [intent]);
 
   useEffect(() => {
+    warnUnconfiguredAuthProviders("signin", ["google", "facebook"]);
+  }, []);
+
+  useEffect(() => {
     if (hydrated && user) {
       const storedIntent = (window.localStorage.getItem(AUTH_INTENT_KEY) as AuthIntent | null) ?? authIntent;
       void validateIntentAndRoute(user, storedIntent);
@@ -81,13 +88,13 @@ function SignInPage() {
   }, [hydrated, user]);
 
   useEffect(() => {
-    if (!clientId || !googleButtonRef.current) {
+    if (googleProvider.strategy !== "google-identity" || !googleProvider.clientId || !googleButtonRef.current) {
       return;
     }
 
+    const googleClientId = googleProvider.clientId;
     let cancelled = false;
     const existingScript = document.querySelector<HTMLScriptElement>('script[data-google-identity="true"]');
-    const supabase = getSupabaseBrowserClient();
 
     const initialize = () => {
       if (cancelled || !window.google?.accounts?.id || !googleButtonRef.current) {
@@ -96,10 +103,11 @@ function SignInPage() {
 
       googleButtonRef.current.innerHTML = "";
       window.google.accounts.id.initialize({
-        client_id: clientId,
+        client_id: googleClientId,
         callback: (response) => {
           void (async () => {
             try {
+              const supabase = await getSupabaseBrowserClient();
               if (supabase) {
                 window.localStorage.setItem(AUTH_INTENT_KEY, authIntent);
                 const { error } = await supabase.auth.signInWithIdToken({
@@ -173,7 +181,7 @@ function SignInPage() {
     return () => {
       cancelled = true;
     };
-  }, [clientId, signInWithGoogle, t]);
+  }, [googleProvider.clientId, googleProvider.strategy, signInWithGoogle, t]);
 
   const submitSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,11 +209,39 @@ function SignInPage() {
     await validateIntentAndRoute(result.user, "client");
   };
 
+  const signInWithGoogleProvider = async () => {
+    if (googleProvider.strategy !== "supabase-oauth") {
+      return;
+    }
+
+    setAuthError(null);
+    const supabase = await getSupabaseBrowserClient();
+    if (!supabase) {
+      return;
+    }
+
+    window.localStorage.setItem(AUTH_INTENT_KEY, authIntent);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.href,
+      },
+    });
+
+    if (error) {
+      setAuthError(error.message || t("auth.googleFailed"));
+    }
+  };
+
   const signInWithFacebookProvider = async () => {
     setAuthError(null);
-    const supabase = getSupabaseBrowserClient();
 
-    if (supabase) {
+    if (facebookProvider.strategy === "supabase-oauth") {
+      const supabase = await getSupabaseBrowserClient();
+      if (!supabase) {
+        return;
+      }
+
       window.localStorage.setItem(AUTH_INTENT_KEY, authIntent);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "facebook",
@@ -220,13 +256,12 @@ function SignInPage() {
       return;
     }
 
-    if (!facebookAppId) {
-      setAuthError(t("auth.facebookUnavailable"));
+    if (facebookProvider.strategy !== "facebook-sdk" || !facebookProvider.appId) {
       return;
     }
 
     try {
-      await loadFacebookSdk(facebookAppId);
+      await loadFacebookSdk(facebookProvider.appId);
       window.FB?.login(
         (response) => {
           if (!response.authResponse) {
@@ -312,82 +347,108 @@ function SignInPage() {
 
             <TabsContent value="signin">
               <form onSubmit={submitSignIn} className="mt-6 space-y-4">
-                <div className="space-y-3">
-                  <div ref={googleButtonRef} className="min-h-11" />
-                  {clientId && !googleLoaded && !authError && (
-                    <div className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
-                      {t("auth.googleReady")}
+                {hasSocialAuth && (
+                  <>
+                    <div className="space-y-3">
+                      {googleProvider.strategy === "google-identity" && <div ref={googleButtonRef} className="min-h-11" />}
+                      {googleProvider.strategy === "google-identity" && !googleLoaded && !authError && (
+                        <div className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
+                          {t("auth.googleReady")}
+                        </div>
+                      )}
+                      {googleProvider.strategy === "supabase-oauth" && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="lg"
+                          className="h-11 w-full rounded-full border-border bg-background text-foreground shadow-sm hover:bg-muted"
+                          onClick={signInWithGoogleProvider}
+                        >
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-white text-xs font-black text-[#4285f4]">
+                            G
+                          </span>
+                          {t("signin.google")}
+                        </Button>
+                      )}
+                      {facebookProvider.enabled && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="lg"
+                          className="h-11 w-full rounded-full border-[#1877f2]/30 bg-[#1877f2] text-white shadow-sm hover:bg-[#166fe5] hover:text-white"
+                          onClick={signInWithFacebookProvider}
+                        >
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-sm font-black text-[#1877f2]">
+                            f
+                          </span>
+                          {t("auth.facebook")}
+                        </Button>
+                      )}
                     </div>
-                  )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="lg"
-                    className="h-11 w-full rounded-full border-[#1877f2]/30 bg-[#1877f2] text-white shadow-sm hover:bg-[#166fe5] hover:text-white"
-                    onClick={signInWithFacebookProvider}
-                  >
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-sm font-black text-[#1877f2]">
-                      f
-                    </span>
-                    {t("auth.facebook")}
-                  </Button>
-                </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="h-px flex-1 bg-border" />
-                  <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                    {t("signin.or")}
-                  </span>
-                  <div className="h-px flex-1 bg-border" />
-                </div>
-
-                <div className="rounded-2xl border border-border bg-background p-3">
-                  <label className="flex cursor-pointer items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={isAdminIntent}
-                      onChange={(e) => setAuthIntent(e.target.checked ? "admin" : "client")}
-                      className="mt-1 h-4 w-4 rounded border-input accent-primary"
-                    />
-                    <span>
-                      <span className="flex items-center gap-2 text-sm font-bold text-foreground">
-                        <ShieldCheck className="h-4 w-4 text-primary" />
-                        {t("auth.signInAsAdmin")}
+                    <div className="flex items-center gap-3">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                        {t("signin.or")}
                       </span>
-                      <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                        {t("auth.adminHint")}
-                      </span>
-                    </span>
-                  </label>
-                </div>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+                  </>
+                )}
 
-                <div>
-                  <Label htmlFor="credential">{t("auth.credential")}</Label>
-                  <Input
-                    id="credential"
-                    required
-                    value={signInData.credential}
-                    onChange={(e) => setSignInData((current) => ({ ...current, credential: e.target.value }))}
-                    placeholder="manager@simba.demo"
-                    className="mt-1.5 h-11 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password">{t("signin.password")}</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    value={signInData.password}
-                    onChange={(e) => setSignInData((current) => ({ ...current, password: e.target.value }))}
-                    placeholder={t("ui.passwordPlaceholder")}
-                    className="mt-1.5 h-11 rounded-xl"
-                  />
-                </div>
+                {emailProvider.enabled && (
+                  <>
+                    <div className="rounded-2xl border border-border bg-background p-3">
+                      <label className="flex cursor-pointer items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={isAdminIntent}
+                          onChange={(e) => setAuthIntent(e.target.checked ? "admin" : "client")}
+                          className="mt-1 h-4 w-4 rounded border-input accent-primary"
+                        />
+                        <span>
+                          <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+                            <ShieldCheck className="h-4 w-4 text-primary" />
+                            {t("auth.signInAsAdmin")}
+                          </span>
+                          <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                            {t("auth.adminHint")}
+                          </span>
+                        </span>
+                      </label>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="credential">{t("auth.credential")}</Label>
+                      <Input
+                        id="credential"
+                        required
+                        value={signInData.credential}
+                        onChange={(e) => setSignInData((current) => ({ ...current, credential: e.target.value }))}
+                        placeholder="manager@simba.demo"
+                        className="mt-1.5 h-11 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="password">{t("signin.password")}</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        required
+                        value={signInData.password}
+                        onChange={(e) => setSignInData((current) => ({ ...current, password: e.target.value }))}
+                        placeholder={t("ui.passwordPlaceholder")}
+                        className="mt-1.5 h-11 rounded-xl"
+                      />
+                    </div>
+                  </>
+                )}
                 {authError && <AuthError message={authError} />}
-                <Button type="submit" size="lg" className="w-full rounded-full gradient-brand text-brand-foreground hover:opacity-90">
-                  {t("signin.cta")}
-                </Button>
+                {emailProvider.enabled && (
+                  <Button type="submit" size="lg" className="w-full rounded-full gradient-brand text-brand-foreground hover:opacity-90">
+                    {t("signin.cta")}
+                  </Button>
+                )}
                 <div className="text-center text-sm text-muted-foreground">
                   {t("auth.noAccount")}{" "}
                   <Button

@@ -144,7 +144,14 @@ function CartLine(p: {
     >
       <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary/40">
         {!err ? (
-          <img src={p.image} alt={p.name} onError={() => setErr(true)} className="h-full w-full object-contain p-2" />
+          <img
+            src={p.image}
+            alt={p.name}
+            loading="lazy"
+            decoding="async"
+            onError={() => setErr(true)}
+            className="h-full w-full object-contain p-2"
+          />
         ) : (
           <Package2 className="h-8 w-8 text-primary" />
         )}

@@ -307,7 +307,7 @@ function createInitialState(): DemoState {
       rating: 4,
       authorName: "Eric",
       title: "Strong grocery availability",
-      comment: "Most staples were in stock and the staff moved the order to ready status fast.",
+      comment: "Ibicuruzwa byinshi by'ibanze byari bihari kandi abakozi bateguye itumiza vuba.",
       createdAt: "2026-04-18T10:30:00.000Z",
     },
     {

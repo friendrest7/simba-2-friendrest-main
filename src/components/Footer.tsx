@@ -26,7 +26,7 @@ export function Footer() {
         <div>
           <h4 className="mb-3 font-semibold">{t("footer.company")}</h4>
           <ul className="space-y-2 text-muted-foreground">
-            <li><a href="https://www.google.com/maps/search/?api=1&query=Simba+Supermarket+Kigali+Rwanda" target="_blank" rel="noreferrer" className="hover:text-primary">{t("footer.company.about")}</a></li>
+            <li><Link to="/about" target="_blank" rel="noopener noreferrer" className="hover:text-primary">{t("footer.company.about")}</Link></li>
             <li><a href="mailto:hello@simba.rw" className="hover:text-primary">{t("footer.company.contact")}</a></li>
             <li><a href="mailto:careers@simba.rw" className="hover:text-primary">{t("footer.company.careers")}</a></li>
           </ul>

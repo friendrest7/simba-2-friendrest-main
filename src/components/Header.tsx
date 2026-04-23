@@ -14,6 +14,7 @@ import { useI18n, LANGS, type Lang } from "@/lib/i18n";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { PICKUP_BRANCHES, type BranchName } from "@/lib/demo-store";
+import { getBranchMapUrl } from "@/lib/branchLocations";
 import {
   Languages,
   MapPin,
@@ -27,9 +28,6 @@ import {
 import { useState } from "react";
 import cartIcon from "@/assets/cart-icon.png";
 
-const KIGALI_MAP_URL =
-  "https://www.google.com/maps/search/?api=1&query=Simba+Supermarket+Kigali+Rwanda";
-
 export function Header() {
   const { theme, toggle, accent, setAccent } = useTheme();
   const { t, lang, setLang } = useI18n();
@@ -37,6 +35,7 @@ export function Header() {
   const { user, signOut } = useAuth();
   const [q, setQ] = useState("");
   const navigate = useNavigate();
+  const selectedBranchMapUrl = getBranchMapUrl(selectedBranch);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +72,16 @@ export function Header() {
         </form>
 
         <label className="hidden items-center gap-2 lg:flex">
-          <MapPin className="h-4 w-4 text-primary" />
+          <a
+            href={selectedBranchMapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open ${selectedBranch} branch in Google Maps`}
+            title={`Open ${selectedBranch} branch in Google Maps`}
+            className="rounded-full p-1 text-primary transition hover:bg-primary/10 hover:text-primary"
+          >
+            <MapPin className="h-4 w-4" />
+          </a>
           <select
             aria-label={t("header.chooseBranch")}
             value={selectedBranch}
@@ -89,7 +97,7 @@ export function Header() {
         </label>
 
         <a
-          href={KIGALI_MAP_URL}
+          href={selectedBranchMapUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="hidden rounded-full bg-primary/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-primary transition hover:bg-primary hover:text-primary-foreground xl:inline-flex"
@@ -228,7 +236,16 @@ export function Header() {
 
       <div className="border-t border-border/60 bg-background/92 px-4 py-2 lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center gap-2">
-          <MapPin className="h-4 w-4 text-primary" />
+          <a
+            href={selectedBranchMapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open ${selectedBranch} branch in Google Maps`}
+            title={`Open ${selectedBranch} branch in Google Maps`}
+            className="rounded-full p-1 text-primary transition hover:bg-primary/10 hover:text-primary"
+          >
+            <MapPin className="h-4 w-4" />
+          </a>
           <select
             aria-label={t("header.chooseBranch")}
             value={selectedBranch}

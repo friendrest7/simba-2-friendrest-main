@@ -1,28 +1,32 @@
-import { createClient, type Session, type SupabaseClient, type User } from "@supabase/supabase-js";
+import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import type { SessionUser } from "@/lib/demo-store";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 let client: SupabaseClient | null = null;
+let clientPromise: Promise<SupabaseClient> | null = null;
 
 export function hasSupabaseConfig() {
   return Boolean(supabaseUrl && supabasePublishableKey);
 }
 
-export function getSupabaseBrowserClient() {
+export async function getSupabaseBrowserClient() {
   if (!hasSupabaseConfig()) {
     return null;
   }
 
   if (!client) {
-    client = createClient(supabaseUrl!, supabasePublishableKey!, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-    });
+    clientPromise ??= import("@supabase/supabase-js").then(({ createClient }) =>
+      createClient(supabaseUrl!, supabasePublishableKey!, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      }),
+    );
+    client = await clientPromise;
   }
 
   return client;
@@ -55,7 +59,7 @@ export function supabaseUserToSessionUser(user: User): SessionUser {
 }
 
 export async function getSupabaseSessionUser() {
-  const supabase = getSupabaseBrowserClient();
+  const supabase = await getSupabaseBrowserClient();
   if (!supabase) return null;
 
   const {
@@ -65,10 +69,10 @@ export async function getSupabaseSessionUser() {
   return session?.user ? supabaseUserToSessionUser(session.user) : null;
 }
 
-export function listenToSupabaseAuth(
+export async function listenToSupabaseAuth(
   onChange: (nextUser: SessionUser | null, session: Session | null) => void,
 ) {
-  const supabase = getSupabaseBrowserClient();
+  const supabase = await getSupabaseBrowserClient();
   if (!supabase) return null;
 
   const {

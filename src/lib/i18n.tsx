@@ -179,7 +179,7 @@ const en: Dict = {
   "hero.shoppingReady": "Verified and ready to continue",
   "hero.shoppingLocked": "Complete the check to unlock fast shopping",
   "hero.promoBasket": "Simba basket",
-  "hero.promoBasketTitle": "Real supermarket flow",
+  "hero.promoBasketTitle": "Nyabyo supermarket flow",
   "hero.promoBasketBody": "Sticky search, floating product cards, fast add-to-cart controls, and smooth grocery browsing.",
   "hero.promoDashboard": "Delivery dashboard",
   "hero.promoDashboardTitle": "Premium and practical",

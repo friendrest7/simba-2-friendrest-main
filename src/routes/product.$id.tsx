@@ -56,7 +56,14 @@ function ProductPage() {
         <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm">
           <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-secondary/40">
             {!imgError ? (
-              <img src={product.image} alt={product.name} onError={() => setImgError(true)} className="h-full w-full object-contain p-4" />
+              <img
+                src={product.image}
+                alt={product.name}
+                decoding="async"
+                fetchPriority="high"
+                onError={() => setImgError(true)}
+                className="h-full w-full object-contain p-4"
+              />
             ) : (
               <Package2 className="h-20 w-20 text-primary" />
             )}

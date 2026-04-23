@@ -26,8 +26,8 @@ type BranchInventoryProduct = (typeof PRODUCTS)[number] & {
   updatedAt: string;
 };
 
-function requireSupabase() {
-  const supabase = getSupabaseBrowserClient();
+async function requireSupabase() {
+  const supabase = await getSupabaseBrowserClient();
   if (!supabase) {
     throw new Error("Supabase client not configured");
   }
@@ -45,7 +45,7 @@ function productName(productId: number) {
 export async function getProfile(userId: string) {
   if (!hasSupabaseConfig()) return null;
 
-  const supabase = requireSupabase();
+  const supabase = await requireSupabase();
   const { data, error } = await supabase
     .from("profiles")
     .select("user_id, full_name, phone, role, assigned_branches")
@@ -65,7 +65,7 @@ export async function upsertProfile(input: {
 }) {
   if (!hasSupabaseConfig()) return null;
 
-  const supabase = requireSupabase();
+  const supabase = await requireSupabase();
   const { error } = await supabase.from("profiles").upsert({
     user_id: input.userId,
     full_name: input.fullName,
@@ -83,7 +83,7 @@ export async function getBranchStock(branch: BranchName, productId: number) {
     return getLocalBranchStock(branch, productId);
   }
 
-  const supabase = requireSupabase();
+  const supabase = await requireSupabase();
   const { data, error } = await supabase
     .from("branch_inventory")
     .select("stock")
@@ -100,7 +100,7 @@ export async function getBranchStockMap(branch: BranchName) {
     return Object.fromEntries(PRODUCTS.map((product) => [product.id, getLocalBranchStock(branch, product.id)]));
   }
 
-  const supabase = requireSupabase();
+  const supabase = await requireSupabase();
   const { data, error } = await supabase
     .from("branch_inventory")
     .select("product_id, stock")
@@ -132,7 +132,7 @@ export async function getBranchStockMaps(branches: BranchName[]) {
     return maps;
   }
 
-  const supabase = requireSupabase();
+  const supabase = await requireSupabase();
   const { data, error } = await supabase
     .from("branch_inventory")
     .select("branch_name, product_id, stock")
@@ -170,7 +170,7 @@ export async function updateBranchStock(branch: BranchName, productId: number, n
     return { ok: true as const };
   }
 
-  const supabase = requireSupabase();
+  const supabase = await requireSupabase();
   const { error } = await supabase.from("branch_inventory").upsert({
     branch_name: branch,
     product_id: productId,
@@ -186,7 +186,7 @@ export async function getBranchReviews(branch: BranchName): Promise<BranchReview
     return getLocalBranchReviews(branch);
   }
 
-  const supabase = requireSupabase();
+  const supabase = await requireSupabase();
   const { data, error } = await supabase
     .from("branch_reviews")
     .select("id, branch_name, rating, author_name, title, comment, created_at")
@@ -230,7 +230,7 @@ export async function addBranchReview(input: {
     return addLocalReview(input);
   }
 
-  const supabase = requireSupabase();
+  const supabase = await requireSupabase();
   const { data, error } = await supabase
     .from("branch_reviews")
     .insert({
@@ -277,7 +277,7 @@ export async function createPickupOrder(input: {
     return createLocalOrder(input);
   }
 
-  const supabase = requireSupabase();
+  const supabase = await requireSupabase();
   const sanitizedItems = input.items.filter((item) => item.quantity > 0);
   if (!sanitizedItems.length) {
     return { ok: false as const, error: "checkout.emptyCart" };
@@ -384,7 +384,7 @@ export async function getOrdersForBranches(branches: BranchName[]): Promise<Orde
     return getLocalOrdersForBranches(branches);
   }
 
-  const supabase = requireSupabase();
+  const supabase = await requireSupabase();
   if (!branches.length) return [];
 
   const { data, error } = await supabase
@@ -448,7 +448,7 @@ export async function getOrdersForUser(user: SessionUser): Promise<OrderRecord[]
     return getLocalOrdersForUser(user);
   }
 
-  const supabase = requireSupabase();
+  const supabase = await requireSupabase();
   const { data, error } = await supabase
     .from("orders")
     .select(`
@@ -510,7 +510,7 @@ export async function updateOrderStatus(orderNumber: string, status: OrderStatus
     return updateLocalOrderStatus(orderNumber, status);
   }
 
-  const supabase = requireSupabase();
+  const supabase = await requireSupabase();
   const { error } = await supabase.from("orders").update({ status }).eq("order_number", orderNumber);
   if (error) throw error;
   return { ok: true as const };

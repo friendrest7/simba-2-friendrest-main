@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_FACEBOOK_APP_ID?: string;
   readonly VITE_SUPABASE_URL?: string;
   readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string;
+  readonly VITE_SUPABASE_AUTH_PROVIDERS?: string;
+  readonly VITE_ENABLE_PHONE_OTP?: string;
 }
 
 interface ImportMeta {

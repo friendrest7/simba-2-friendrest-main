@@ -91,19 +91,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void bootstrap();
 
-    const subscription = listenToSupabaseAuth((nextUser) => {
+    let cancelled = false;
+    let subscription: { unsubscribe: () => void } | null = null;
+
+    void listenToSupabaseAuth((nextUser) => {
       void (async () => {
         setUser(await syncSupabaseProfile(nextUser));
       })();
+    }).then((nextSubscription) => {
+      if (cancelled) {
+        nextSubscription?.unsubscribe();
+        return;
+      }
+      subscription = nextSubscription;
     });
 
     return () => {
+      cancelled = true;
       subscription?.unsubscribe();
     };
   }, []);
 
   const signIn = async (input: SignInInput) => {
-    const supabase = getSupabaseBrowserClient();
+    const supabase = await getSupabaseBrowserClient();
     if (supabase) {
       const normalizedCredential = input.credential.trim();
       const isEmail = normalizedCredential.includes("@");
@@ -131,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (input: SignUpInput) => {
-    const supabase = getSupabaseBrowserClient();
+    const supabase = await getSupabaseBrowserClient();
     if (supabase) {
       const { data, error } = await supabase.auth.signUp({
         email: input.email.trim(),
@@ -196,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    const supabase = getSupabaseBrowserClient();
+    const supabase = await getSupabaseBrowserClient();
     if (supabase) {
       await supabase.auth.signOut();
     }
