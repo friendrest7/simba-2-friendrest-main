@@ -13,7 +13,7 @@ export function ProductCard({ product }: { product: Product }) {
   const [imgError, setImgError] = useState(false);
 
   return (
-    <div className="group relative flex h-full flex-col rounded-[1.65rem] border border-border/70 bg-card p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-lg">
+    <div className="group relative flex h-full flex-col rounded-[1.65rem] border border-border/70 bg-card p-3 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-lg hover:shadow-primary/10">
       <div className="flex items-center justify-between gap-2">
         <span className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-primary">
           {branchStock > 0 ? t("card.inStock") : t("card.outOfStock")}
@@ -31,7 +31,7 @@ export function ProductCard({ product }: { product: Product }) {
             loading="lazy"
             decoding="async"
             onError={() => setImgError(true)}
-            className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.045]"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center rounded-2xl bg-white text-primary">

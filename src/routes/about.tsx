@@ -27,9 +27,12 @@ function AboutPage() {
             <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
               Branch-aware grocery ordering for Kigali shoppers.
             </h1>
+            <p className="mt-4 text-base font-semibold text-primary-foreground/92">
+              Order your basket online and pick it up from your selected branch.
+            </p>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-primary-foreground/82">
-              Simba connects customers to branch stock nyabyo before checkout. Customers choose a branch,
-              reserve bihari products, and collect orders with clearer inventory visibility for abakozi.
+              Simba connects customers to real branch stock before checkout. Customers choose a branch,
+              reserve available products, and collect orders with clearer inventory visibility for staff.
             </p>
           </div>
           <div className="grid content-center gap-4 bg-background p-8 sm:p-10">

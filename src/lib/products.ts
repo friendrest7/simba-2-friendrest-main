@@ -41,6 +41,14 @@ export type CategoryInfo = {
   count: number;
 };
 
+export type PriceCategoryInfo = {
+  id: string;
+  labelKey: string;
+  hintKey: string;
+  minPrice?: number;
+  maxPrice?: number;
+};
+
 export const CATEGORIES: CategoryInfo[] = Object.entries(
   PRODUCTS.reduce<Record<string, number>>((acc, p) => {
     acc[p.category] = (acc[p.category] || 0) + 1;
@@ -78,6 +86,24 @@ const CATEGORY_LABEL_KEYS: Record<string, string> = {
 
 export const categoryLabel = (name: string, t: (key: string) => string) =>
   t(CATEGORY_LABEL_KEYS[name] ?? name);
+
+export const PRICE_CATEGORIES: PriceCategoryInfo[] = [
+  { id: "all", labelKey: "budget.all", hintKey: "budget.allHint" },
+  { id: "cheap", labelKey: "budget.cheap", hintKey: "budget.cheapHint", maxPrice: 3000 },
+  { id: "budget", labelKey: "budget.budget", hintKey: "budget.budgetHint", maxPrice: 5000 },
+  { id: "value", labelKey: "budget.value", hintKey: "budget.valueHint", maxPrice: 10000 },
+  { id: "premium", labelKey: "budget.premium", hintKey: "budget.premiumHint", minPrice: 10000 },
+];
+
+export const findPriceCategory = (id?: string) =>
+  PRICE_CATEGORIES.find((category) => category.id === id) ?? PRICE_CATEGORIES[0];
+
+export const matchesPriceCategory = (price: number, priceCategoryId?: string) => {
+  const category = findPriceCategory(priceCategoryId);
+  if (category.minPrice !== undefined && price < category.minPrice) return false;
+  if (category.maxPrice !== undefined && price > category.maxPrice) return false;
+  return true;
+};
 
 export const productById = (id: number) => PRODUCTS.find((p) => p.id === id);
 

@@ -1,25 +1,44 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ProductCard } from "@/components/ProductCard";
-import { CATEGORIES, PRODUCTS, categoryLabel } from "@/lib/products";
+import { CATEGORIES, PRODUCTS, categoryLabel, formatRWF } from "@/lib/products";
 import { useI18n } from "@/lib/i18n";
 import { conversationalSearch } from "@/lib/demo-store";
 import { formatSearchExplanation } from "@/lib/search-explanation";
 import { useCart } from "@/lib/cart";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowRight, Coins, Gem, SlidersHorizontal, Wallet, X } from "lucide-react";
 
-type SearchParams = { q?: string; cat?: string; sort?: string; inStock?: string };
+export type ShopSearchParams = { q?: string; cat?: string; sort?: string; inStock?: string; min?: number; max?: number };
+
+export const validateShopSearch = (s: Record<string, unknown>): ShopSearchParams => ({
+  q: typeof s.q === "string" ? s.q : undefined,
+  cat: typeof s.cat === "string" ? s.cat : undefined,
+  sort: typeof s.sort === "string" ? s.sort : undefined,
+  inStock: typeof s.inStock === "string" ? s.inStock : undefined,
+  min: typeof s.min === "number" ? s.min : typeof s.min === "string" && !Number.isNaN(Number(s.min)) ? Number(s.min) : undefined,
+  max: typeof s.max === "number" ? s.max : typeof s.max === "string" && !Number.isNaN(Number(s.max)) ? Number(s.max) : undefined,
+});
+
+type PriceRangeOption = {
+  id: string;
+  label: string;
+  min?: number;
+  max?: number;
+  icon: typeof Wallet;
+};
+
+const PRICE_RANGE_OPTIONS: PriceRangeOption[] = [
+  { id: "micro", label: "0 - 1,000 RWF", min: 0, max: 1000, icon: Wallet },
+  { id: "daily", label: "1,000 - 10,000 RWF", min: 1000, max: 10000, icon: Coins },
+  { id: "basket", label: "10,000 - 100,000 RWF", min: 10000, max: 100000, icon: Wallet },
+  { id: "premium", label: "100,000+ RWF", min: 100000, icon: Gem },
+];
 
 export const Route = createFileRoute("/products")({
   component: ProductsPage,
-  validateSearch: (s: Record<string, unknown>): SearchParams => ({
-    q: typeof s.q === "string" ? s.q : undefined,
-    cat: typeof s.cat === "string" ? s.cat : undefined,
-    sort: typeof s.sort === "string" ? s.sort : undefined,
-    inStock: typeof s.inStock === "string" ? s.inStock : undefined,
-  }),
+  validateSearch: validateShopSearch,
   head: () => ({
     meta: [
       { title: "All Products - Simba Supermarket" },
@@ -28,18 +47,21 @@ export const Route = createFileRoute("/products")({
   }),
 });
 
-function ProductsPage() {
+export function ProductsPage() {
   const { t } = useI18n();
   const { selectedBranch, stockOf } = useCart();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const [q, setQ] = useState(search.q ?? "");
+  const [draftPrompt, setDraftPrompt] = useState(search.q ?? "");
   const cat = search.cat ?? "";
   const sort = search.sort ?? "popular";
   const inStockOnly = search.inStock === "1";
+  const minPrice = search.min;
+  const maxPrice = search.max;
   const [showFilters, setShowFilters] = useState(false);
 
-  const updateSearch = (next: Partial<SearchParams>) => {
+  const updateSearch = (next: Partial<ShopSearchParams>) => {
     navigate({ search: (prev) => ({ ...prev, ...next }) as never });
   };
 
@@ -47,6 +69,8 @@ function ProductsPage() {
     let list = q.trim() ? conversationalSearch(q, selectedBranch).products : [...PRODUCTS];
     if (cat) list = list.filter((p) => p.category === cat);
     if (inStockOnly) list = list.filter((p) => stockOf(p.id) > 0);
+    if (minPrice !== undefined) list = list.filter((p) => p.price >= minPrice);
+    if (maxPrice !== undefined) list = list.filter((p) => p.price <= maxPrice);
     switch (sort) {
       case "priceAsc":
         list.sort((a, b) => a.price - b.price);
@@ -61,11 +85,11 @@ function ProductsPage() {
         break;
     }
     return list;
-  }, [q, cat, sort, inStockOnly, selectedBranch, stockOf]);
+  }, [q, cat, sort, inStockOnly, minPrice, maxPrice, selectedBranch, stockOf]);
 
   const clearFilters = () => {
     setQ("");
-    updateSearch({ q: undefined, cat: undefined, sort: "popular", inStock: undefined });
+    updateSearch({ q: undefined, cat: undefined, sort: "popular", inStock: undefined, min: undefined, max: undefined });
     setShowFilters(false);
   };
 
@@ -73,6 +97,30 @@ function ProductsPage() {
     () => formatSearchExplanation(conversationalSearch(q || t("search.defaultTerms"), selectedBranch), t),
     [q, selectedBranch, t],
   );
+  const promptSuggestions = useMemo(
+    () => t("products.aiExamples")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 3),
+    [t],
+  );
+
+  const submitPrompt = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const prompt = draftPrompt.trim();
+    setQ(prompt);
+    updateSearch({ q: prompt || undefined });
+  };
+
+  const buildShopRangeHref = (option: PriceRangeOption) => {
+    const params = new URLSearchParams();
+    if (option.min !== undefined) params.set("min", String(option.min));
+    if (option.max !== undefined) params.set("max", String(option.max));
+    return `/shop?${params.toString()}`;
+  };
+
+  const isActiveRange = (option: PriceRangeOption) => minPrice === option.min && maxPrice === option.max;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -86,32 +134,93 @@ function ProductsPage() {
         <p className="mt-2 text-xs text-muted-foreground">{t("products.aiExamples")}</p>
       </div>
 
-      <div className="sticky top-16 z-30 mb-8 flex flex-col gap-4 bg-background/90 py-4 backdrop-blur md:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              updateSearch({ q: e.target.value || undefined });
+      <div className="sticky top-16 z-30 mb-8 bg-background/90 py-4 backdrop-blur">
+        <form onSubmit={submitPrompt} className="grid gap-4 rounded-[1.75rem] border border-border bg-card p-4 shadow-sm">
+          <Textarea
+            value={draftPrompt}
+            onChange={(e) => setDraftPrompt(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                e.currentTarget.form?.requestSubmit();
+              }
             }}
             placeholder={t("hero.searchHint2")}
-            className="h-12 rounded-full border-input bg-muted/50 pl-10 text-base focus-visible:ring-primary/50"
+            rows={2}
+            className="min-h-[96px] rounded-[1.25rem] border-input bg-muted/40 px-4 py-3 text-base focus-visible:ring-primary/50"
           />
+          <div className="flex flex-wrap gap-2">
+            {promptSuggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => setDraftPrompt(suggestion)}
+                className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition hover:border-primary/40 hover:bg-primary/5"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center">
+            <Button type="submit" className="h-12 rounded-full px-5 font-bold">
+              {t("ui.searchButton")}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+
+            <button onClick={() => setShowFilters(!showFilters)} type="button" className="flex h-12 items-center justify-center gap-2 rounded-full bg-secondary px-5 text-secondary-foreground transition-colors hover:bg-secondary/80 md:hidden">
+              <SlidersHorizontal className="h-5 w-5" />
+              <span className="font-semibold">{t("ui.filters")}</span>
+            </button>
+
+            <div className="hidden items-center gap-3 md:flex">
+              <select value={sort} onChange={(e) => updateSearch({ sort: e.target.value })} className="h-12 rounded-full border border-input bg-background px-4 text-base font-medium text-foreground shadow-sm focus:border-primary/50 focus:ring-primary/50">
+                <option value="popular">{t("sort.popular")}</option>
+                <option value="priceAsc">{t("sort.priceAsc")}</option>
+                <option value="priceDesc">{t("sort.priceDesc")}</option>
+                <option value="name">{t("sort.name")}</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div className="mb-8">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Price range</div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {minPrice !== undefined || maxPrice !== undefined
+                ? `Showing products ${minPrice !== undefined ? `from ${formatRWF(minPrice)}` : ""}${minPrice !== undefined && maxPrice !== undefined ? " to " : ""}${maxPrice !== undefined ? formatRWF(maxPrice) : "and above"}`
+                : "Open a focused price band in a new tab."}
+            </p>
+          </div>
         </div>
-
-        <button onClick={() => setShowFilters(!showFilters)} className="flex h-12 items-center justify-center gap-2 rounded-full bg-secondary px-5 text-secondary-foreground transition-colors hover:bg-secondary/80 md:hidden">
-          <SlidersHorizontal className="h-5 w-5" />
-          <span className="font-semibold">{t("ui.filters")}</span>
-        </button>
-
-        <div className="hidden items-center gap-3 md:flex">
-          <select value={sort} onChange={(e) => updateSearch({ sort: e.target.value })} className="h-12 rounded-full border border-input bg-background px-4 text-base font-medium text-foreground shadow-sm focus:border-primary/50 focus:ring-primary/50">
-            <option value="popular">{t("sort.popular")}</option>
-            <option value="priceAsc">{t("sort.priceAsc")}</option>
-            <option value="priceDesc">{t("sort.priceDesc")}</option>
-            <option value="name">{t("sort.name")}</option>
-          </select>
+        <div className="-mx-4 overflow-x-auto px-4 pb-2">
+          <div className="flex min-w-max gap-3">
+            {PRICE_RANGE_OPTIONS.map((option) => {
+              const Icon = option.icon;
+              const active = isActiveRange(option);
+              return (
+                <a
+                  key={option.id}
+                  href={buildShopRangeHref(option)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`group flex min-w-[188px] items-center gap-3 rounded-[1.5rem] border px-4 py-3 shadow-sm transition ${active ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "border-border bg-card text-foreground hover:border-primary/35 hover:bg-primary/5"}`}
+                >
+                  <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${active ? "bg-white/16" : "bg-primary/10 text-primary"}`}>
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="text-sm font-black tracking-tight">{option.label}</span>
+                    <span className={`text-xs ${active ? "text-primary-foreground/75" : "text-muted-foreground group-hover:text-foreground/80"}`}>
+                      Open filtered shop
+                    </span>
+                  </span>
+                </a>
+              );
+            })}
+          </div>
         </div>
       </div>
 

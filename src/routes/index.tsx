@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { ArrowRight, CheckCircle2, Clock3, ShieldCheck, Store } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { ArrowRight, ShieldCheck, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ProductCard } from "@/components/ProductCard";
 import { BranchReviews } from "@/components/BranchReviews";
+import { landingPanelContent } from "@/content/landing-panel";
 import { useCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n";
-import { conversationalSearch, getBranchReviewSummary, PICKUP_BRANCHES, type BranchName } from "@/lib/demo-store";
+import { conversationalSearch, PICKUP_BRANCHES, type BranchName } from "@/lib/demo-store";
 import { formatSearchExplanation } from "@/lib/search-explanation";
 import { getBranchMapUrl } from "@/lib/branchLocations";
 
@@ -29,15 +30,17 @@ function HomePage() {
   const { t } = useI18n();
   const { count, subtotal, selectedBranch, setSelectedBranch } = useCart();
   const navigate = useNavigate();
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
   const [q, setQ] = useState("");
+  const [draftPrompt, setDraftPrompt] = useState("");
 
   const featuredSearch = useMemo(
-    () => conversationalSearch(q || t("search.defaultTerms"), selectedBranch),
-    [q, selectedBranch, t],
+    () => conversationalSearch(q || landingPanelContent.defaultSearchTerms, selectedBranch),
+    [q, selectedBranch],
   );
 
   const featuredResults = featuredSearch.products.slice(0, 10);
-  const heroSearchExplanation = useMemo(() => formatSearchExplanation(featuredSearch, t), [featuredSearch, t]);
+  const promptSuggestions = landingPanelContent.suggestions;
 
   const openBranchMap = (branch: BranchName) => {
     setSelectedBranch(branch);
@@ -46,150 +49,111 @@ function HomePage() {
     }
   };
 
+  useEffect(() => {
+    if (heroVideoRef.current) {
+      heroVideoRef.current.playbackRate = 0.55;
+    }
+  }, []);
+
+  const submitPrompt = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const prompt = draftPrompt.trim();
+    setQ(prompt);
+    navigate({ to: "/products", search: prompt ? ({ q: prompt } as never) : undefined });
+  };
+
   return (
-    <div className="pb-24">
-      <section className="relative overflow-hidden bg-[linear-gradient(135deg,#083325_0%,#0b4f39_45%,#0a241b_100%)] text-white">
+    <div>
+      <section className="relative min-h-[52vh] overflow-hidden bg-[#071711] text-white md:min-h-[56vh]">
         <video
-          className="absolute inset-0 h-full w-full object-cover opacity-38"
+          ref={heroVideoRef}
+          className="absolute inset-0 h-full w-full object-cover object-center opacity-80"
           autoPlay
           muted
+          defaultMuted
           loop
           playsInline
           preload="metadata"
           aria-hidden="true"
         >
-          <source src="/simba-landing-hero.mp4" type="video/mp4" />
+          <source src="/simba.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(8,51,37,0.9),rgba(11,79,57,0.74)_48%,rgba(10,36,27,0.94)),radial-gradient(circle_at_top_right,rgba(255,184,77,0.2),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.08),transparent_28%)]" />
-        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-[1.1fr_0.9fr] md:items-center md:py-16">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em]">
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,23,17,0.48)_0%,rgba(7,23,17,0.2)_42%,rgba(7,23,17,0.08)_100%),radial-gradient(circle_at_top_right,rgba(255,184,77,0.1),transparent_22%)]" />
+        <div className="relative mx-auto flex min-h-[52vh] max-w-7xl flex-col justify-center px-4 py-8 md:min-h-[56vh] md:py-10">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/8 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] backdrop-blur-sm">
               <ShieldCheck className="h-4 w-4 text-brand-yellow" />
               {t("hero.badge2")}
             </div>
-            <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[0.94] tracking-tight sm:text-6xl">
-              {t("hero.title")}
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/82">{t("hero.body2")}</p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              {[
-                t("hero.trust.stock"),
-                t("hero.trust.orders"),
-                t("hero.trust.staff"),
-              ].map((signal) => (
-                <div key={signal} className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white/85">
-                  {signal}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <Button
-                asChild
-                size="lg"
-                className="h-12 rounded-2xl bg-brand-yellow px-6 text-sm font-extrabold text-black hover:bg-brand-yellow/90"
-              >
-                <Link to="/products">
-                  {t("hero.cta")}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <div className="text-sm text-white/70">
-                {count > 0 ? `${count} items - ${subtotal.toLocaleString()} RWF` : t("pickup.free")}
-              </div>
-            </div>
           </div>
 
-          <div className="grid gap-4">
-            <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 shadow-2xl backdrop-blur-md">
+          <div className="mt-14 flex justify-start md:mt-16">
+            <div className="w-full max-w-2xl rounded-[1.5rem] border border-white/12 bg-[rgba(255,255,255,0.08)] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.24)] backdrop-blur-xl">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <div className="text-xs font-bold uppercase tracking-[0.18em] text-brand-yellow">
-                    {t("hero.searchLabel")}
+                    {landingPanelContent.label}
                   </div>
-                  <h2 className="mt-2 text-2xl font-black">{selectedBranch}</h2>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/12">
-                  <Store className="h-6 w-6 text-brand-yellow" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
+                  <Store className="h-4 w-4 text-brand-yellow" />
                 </div>
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_160px]">
-                <Input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder={t("hero.searchHint2")}
-                  className="h-12 rounded-2xl border-0 bg-white text-black shadow-none"
+              <form className="mt-3 grid gap-2.5 lg:grid-cols-[1.5fr_0.85fr] lg:items-start" onSubmit={submitPrompt}>
+                <div className="grid gap-3">
+                <Textarea
+                  value={draftPrompt}
+                  onChange={(e) => setDraftPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      e.currentTarget.form?.requestSubmit();
+                    }
+                  }}
+                  placeholder={landingPanelContent.placeholder}
+                  rows={2}
+                  className="min-h-[58px] rounded-[1.1rem] border-0 bg-white px-3.5 py-2.5 text-sm text-black shadow-none placeholder:text-black/45 focus-visible:ring-2 focus-visible:ring-brand-yellow/60"
                 />
-                <select
-                  value={selectedBranch}
-                  onChange={(e) => setSelectedBranch(e.target.value as BranchName)}
-                  className="h-12 rounded-2xl border border-white/15 bg-white/10 px-3 text-sm font-semibold text-white"
-                >
-                  {PICKUP_BRANCHES.map((branch) => (
-                    <option key={branch} value={branch} className="text-black">
-                      {branch}
-                    </option>
+                <div className="flex flex-wrap gap-1.5">
+                  {promptSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => setDraftPrompt(suggestion)}
+                      className="rounded-full border border-white/12 bg-white/8 px-2.5 py-1 text-[11px] font-semibold text-white/85 transition hover:bg-white/14"
+                    >
+                      {suggestion}
+                    </button>
                   ))}
-                </select>
-              </div>
-
-              <p className="mt-3 text-sm text-white/75">
-                {heroSearchExplanation}
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-3">
-              <TrustStat label={t("dashboard.orderCount")} value="nyabyo" helper={t("home.trust1")} />
-              <TrustStat label={t("pickup.branchStock")} value="bihari" helper={t("home.trust2")} />
-              <TrustStat label={t("app.dashboard")} value="abakozi" helper={t("home.trust3")} />
+                </div>
+                </div>
+                <div className="grid gap-3 lg:self-stretch">
+                  <select
+                    value={selectedBranch}
+                    onChange={(e) => setSelectedBranch(e.target.value as BranchName)}
+                    className="h-10 rounded-xl border border-white/15 bg-white/10 px-3 text-xs font-semibold text-white"
+                  >
+                    {PICKUP_BRANCHES.map((branch) => (
+                      <option key={branch} value={branch} className="text-black">
+                        {branch}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    type="submit"
+                    className="h-10 rounded-xl bg-brand-yellow px-4 text-xs font-extrabold text-black shadow-lg shadow-black/20 hover:bg-brand-yellow/90"
+                  >
+                    {landingPanelContent.actionLabel}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <p className="text-[11px] leading-5 text-white/72 lg:pt-0.5">
+                    {landingPanelContent.title}
+                  </p>
+                </div>
+              </form>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-8">
-        <div className="rounded-[2rem] border border-border bg-card p-6 shadow-sm">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{t("home.branchTitle")}</div>
-              <h2 className="mt-1 text-2xl font-black tracking-tight">{t("home.branchBody")}</h2>
-            </div>
-            <div className="text-sm text-muted-foreground">{t("home.trustTitle")}</div>
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {PICKUP_BRANCHES.map((branch) => {
-              const summary = getBranchReviewSummary(branch);
-              const active = branch === selectedBranch;
-
-              return (
-                <button
-                  key={branch}
-                  type="button"
-                  onClick={() => openBranchMap(branch)}
-                  className={`rounded-[1.5rem] border p-4 text-left transition ${active ? "border-primary bg-primary/6 shadow-md" : "border-border bg-background hover:border-primary/30"}`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-lg font-black">{branch}</div>
-                    {active && <CheckCircle2 className="h-5 w-5 text-primary" />}
-                  </div>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock3 className="h-4 w-4" />
-                    {summary.count > 0 ? `${summary.average.toFixed(1)} / 5` : "ishami rishya"}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-2">
-        <div className="grid gap-4 md:grid-cols-3">
-          <InfoCard title={t("home.trust1")} body={t("home.trustBody")} />
-          <InfoCard title={t("home.trust2")} body={t("pickup.instructions")} />
-          <InfoCard title={t("home.trust3")} body={t("dashboard.subtitle")} />
         </div>
       </section>
 
@@ -216,25 +180,6 @@ function HomePage() {
       <section className="mx-auto max-w-7xl px-4 py-2">
         <BranchReviews branch={selectedBranch} />
       </section>
-    </div>
-  );
-}
-
-function TrustStat({ label, value, helper }: { label: string; value: string; helper: string }) {
-  return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/10 p-4 text-white backdrop-blur">
-      <div className="text-xs font-bold uppercase tracking-[0.18em] text-brand-yellow">{label}</div>
-      <div className="mt-2 text-3xl font-black">{value}</div>
-      <div className="mt-2 text-sm text-white/70">{helper}</div>
-    </div>
-  );
-}
-
-function InfoCard({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="rounded-[1.75rem] border border-border bg-card p-5 shadow-sm">
-      <div className="text-base font-black">{title}</div>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p>
     </div>
   );
 }

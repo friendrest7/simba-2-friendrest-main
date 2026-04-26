@@ -26,7 +26,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { useState } from "react";
-import cartIcon from "@/assets/cart-icon.png";
+import logoImage from "@/assets/logo1.png";
 
 export function Header() {
   const { theme, toggle, accent, setAccent } = useTheme();
@@ -45,28 +45,28 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/94 backdrop-blur supports-[backdrop-filter]:bg-background/88">
+    <header className="sticky top-0 z-50 w-full border-b border-primary/40 bg-primary text-primary-foreground">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 md:gap-4">
         <Link to="/" className="flex shrink-0 items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-border/70 bg-white p-1.5 shadow-md shadow-primary/20">
-            <img src={cartIcon} alt="Simba" className="h-full w-full object-contain" />
+          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-transparent p-1.5 shadow-md shadow-black/15">
+            <img src={logoImage} alt="Simba" className="h-full w-full object-contain" />
           </div>
           <div className="hidden min-w-0 sm:block">
-            <div className="text-base font-black tracking-tight text-foreground">Simba</div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
+            <div className="text-base font-black tracking-tight text-primary-foreground">Simba</div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary-foreground/85">
               Supermarket
             </div>
           </div>
         </Link>
 
         <form onSubmit={submit} className="min-w-0 flex-1">
-          <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card px-3 py-2 shadow-sm">
+          <div className="flex items-center gap-3 rounded-2xl border border-white/25 bg-background/95 px-3 py-2 shadow-sm">
             <Search className="h-4 w-4 text-primary" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={t("search.placeholder")}
-              className="h-8 border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
+              className="h-8 border-0 bg-transparent px-0 text-sm text-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
             />
           </div>
         </form>
@@ -78,7 +78,7 @@ export function Header() {
             rel="noopener noreferrer"
             aria-label={`Open ${selectedBranch} branch in Google Maps`}
             title={`Open ${selectedBranch} branch in Google Maps`}
-            className="rounded-full p-1 text-primary transition hover:bg-primary/10 hover:text-primary"
+            className="rounded-full p-1 text-primary-foreground transition hover:bg-white/15 hover:text-primary-foreground"
           >
             <MapPin className="h-4 w-4" />
           </a>
@@ -86,7 +86,7 @@ export function Header() {
             aria-label={t("header.chooseBranch")}
             value={selectedBranch}
             onChange={(e) => setSelectedBranch(e.target.value as BranchName)}
-            className="h-10 rounded-xl border border-input bg-background px-3 text-sm font-semibold text-foreground"
+            className="h-10 rounded-xl border border-white/25 bg-background/95 px-3 text-sm font-semibold text-foreground"
           >
             {PICKUP_BRANCHES.map((branch) => (
               <option key={branch} value={branch}>
@@ -100,7 +100,7 @@ export function Header() {
           href={selectedBranchMapUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden rounded-full bg-primary/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-primary transition hover:bg-primary hover:text-primary-foreground xl:inline-flex"
+          className="hidden rounded-full bg-white/14 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground transition hover:bg-white hover:text-primary xl:inline-flex"
         >
           {t("ui.fastDeliveryBanner")}
         </a>
@@ -111,14 +111,14 @@ export function Header() {
             variant="ghost"
             onClick={toggle}
             aria-label="Toggle theme"
-            className="rounded-full"
+            className="rounded-full text-primary-foreground hover:bg-white/12 hover:text-primary-foreground"
           >
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="rounded-full" aria-label={t("ui.colorTheme")}>
+              <Button size="icon" variant="ghost" className="rounded-full text-primary-foreground hover:bg-white/12 hover:text-primary-foreground" aria-label={t("ui.colorTheme")}>
                 <Palette className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -143,7 +143,7 @@ export function Header() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="rounded-full" aria-label="Language">
+              <Button size="icon" variant="ghost" className="rounded-full text-primary-foreground hover:bg-white/12 hover:text-primary-foreground" aria-label="Language">
                 <Languages className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -167,8 +167,8 @@ export function Header() {
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="rounded-full gap-2 px-2 hover:bg-secondary">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+              <Button variant="ghost" className="rounded-full gap-2 px-2 text-primary-foreground hover:bg-white/12 hover:text-primary-foreground">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-primary-foreground">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <span className="hidden text-sm font-semibold sm:inline">
@@ -200,9 +200,9 @@ export function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Button asChild variant="ghost" className="rounded-full gap-2 hover:bg-secondary">
+          <Button asChild variant="ghost" className="rounded-full gap-2 text-primary-foreground hover:bg-white/12 hover:text-primary-foreground">
             <Link to="/signin">
-              <UserIcon className="h-4 w-4 text-primary" />
+              <UserIcon className="h-4 w-4 text-primary-foreground" />
               <span className="hidden font-semibold sm:inline">{t("nav.signin")}</span>
             </Link>
           </Button>
@@ -210,7 +210,7 @@ export function Header() {
 
         <Button
           asChild
-          className="relative h-11 rounded-2xl bg-primary px-4 text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/92"
+          className="relative h-11 rounded-2xl bg-white/16 px-4 text-primary-foreground shadow-lg shadow-black/15 hover:bg-white/22"
         >
           <Link to="/cart" className="gap-2">
             <div className="relative">
@@ -234,7 +234,7 @@ export function Header() {
         </Button>
       </div>
 
-      <div className="border-t border-border/60 bg-background/92 px-4 py-2 lg:hidden">
+      <div className="border-t border-white/20 bg-primary px-4 py-2 lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center gap-2">
           <a
             href={selectedBranchMapUrl}
@@ -242,7 +242,7 @@ export function Header() {
             rel="noopener noreferrer"
             aria-label={`Open ${selectedBranch} branch in Google Maps`}
             title={`Open ${selectedBranch} branch in Google Maps`}
-            className="rounded-full p-1 text-primary transition hover:bg-primary/10 hover:text-primary"
+            className="rounded-full p-1 text-primary-foreground transition hover:bg-white/15 hover:text-primary-foreground"
           >
             <MapPin className="h-4 w-4" />
           </a>
@@ -250,7 +250,7 @@ export function Header() {
             aria-label={t("header.chooseBranch")}
             value={selectedBranch}
             onChange={(e) => setSelectedBranch(e.target.value as BranchName)}
-            className="h-9 flex-1 rounded-xl border border-input bg-background px-3 text-sm font-semibold text-foreground"
+            className="h-9 flex-1 rounded-xl border border-white/25 bg-background/95 px-3 text-sm font-semibold text-foreground"
           >
             {PICKUP_BRANCHES.map((branch) => (
               <option key={branch} value={branch}>
@@ -259,7 +259,7 @@ export function Header() {
             ))}
           </select>
           {(user?.role === "manager" || user?.role === "staff") && (
-            <Button asChild variant="outline" size="sm" className="rounded-xl">
+            <Button asChild variant="outline" size="sm" className="rounded-xl border-white/25 bg-background/95 text-primary hover:bg-background">
               <Link to="/admin-dashboard">{t("app.dashboard")}</Link>
             </Button>
           )}
