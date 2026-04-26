@@ -7,6 +7,9 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string;
   readonly VITE_SUPABASE_AUTH_PROVIDERS?: string;
   readonly VITE_ENABLE_PHONE_OTP?: string;
+  readonly VITE_PUBLIC_SITE_URL?: string;
+  readonly VITE_SITE_URL?: string;
+  readonly VITE_FORCE_GOOGLE_IDENTITY?: string;
 }
 
 interface ImportMeta {
@@ -34,6 +37,7 @@ declare global {
               shape?: "rectangular" | "pill" | "circle" | "square";
               width?: number | string;
               logo_alignment?: "left" | "center";
+              locale?: string;
             },
           ) => void;
           prompt: () => void;

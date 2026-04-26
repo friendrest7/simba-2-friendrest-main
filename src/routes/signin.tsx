@@ -6,7 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { getAuthConfig, warnUnconfiguredAuthProviders } from "@/lib/authConfig";
 import { useI18n } from "@/lib/i18n";
-import { getSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase";
+import {
+  createBrowserRedirectUrl,
+  getSupabaseBrowserClient,
+  hasSupabaseConfig,
+} from "@/lib/supabase";
 import { useEffect, useRef, useState } from "react";
 import { LockKeyhole, Mail, ShieldCheck, Sparkles, UserRound } from "lucide-react";
 import type { SessionUser } from "@/lib/demo-store";
@@ -16,6 +20,12 @@ type AuthTab = "signin" | "signup";
 type AuthIntent = "client" | "admin";
 
 const AUTH_INTENT_KEY = "simba.auth.intent";
+const GOOGLE_LOCALE_BY_LANG = {
+  en: "en",
+  rw: "rw",
+  sw: "sw",
+  tr: "tr",
+} as const;
 
 export const Route = createFileRoute("/signin")({
   component: SignInPage,
@@ -27,7 +37,7 @@ export const Route = createFileRoute("/signin")({
 });
 
 function SignInPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { user, hydrated, signIn, signUp, signInWithGoogle, signInWithFacebook, signOut } = useAuth();
   const navigate = useNavigate();
   const { redirect, intent } = useSearch({ from: "/signin" }) as SignInSearch;
@@ -36,6 +46,11 @@ function SignInPage() {
   const [authIntent, setAuthIntent] = useState<AuthIntent>("client");
   const [signInData, setSignInData] = useState({ credential: "", password: "" });
   const [signUpData, setSignUpData] = useState({ name: "", email: "", phone: "", password: "" });
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotSuccess, setForgotSuccess] = useState<string | null>(null);
+  const [sendingReset, setSendingReset] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const authConfig = getAuthConfig();
@@ -55,8 +70,19 @@ function SignInPage() {
 
   const switchAuthTab = (nextTab: AuthTab) => {
     setAuthError(null);
+    setForgotError(null);
+    setForgotSuccess(null);
+    setShowForgotPassword(false);
     setActiveTab(nextTab);
   };
+
+  const buildSignInCallbackUrl = () =>
+    createBrowserRedirectUrl("/signin", {
+      redirect,
+      intent: authIntent,
+    });
+
+  const buildResetPasswordUrl = () => createBrowserRedirectUrl("/reset-password");
 
   const validateIntentAndRoute = async (sessionUser: SessionUser | null, intent: AuthIntent) => {
     if (intent === "admin" && sessionUser?.role !== "manager" && sessionUser?.role !== "staff") {
@@ -93,8 +119,15 @@ function SignInPage() {
     }
 
     const googleClientId = googleProvider.clientId;
+    const googleLocale = GOOGLE_LOCALE_BY_LANG[lang];
     let cancelled = false;
-    const existingScript = document.querySelector<HTMLScriptElement>('script[data-google-identity="true"]');
+    const desiredScriptSrc = `https://accounts.google.com/gsi/client?hl=${encodeURIComponent(googleLocale)}`;
+    let existingScript = document.querySelector<HTMLScriptElement>('script[data-google-identity="true"]');
+
+    if (existingScript && existingScript.src !== desiredScriptSrc) {
+      existingScript.remove();
+      existingScript = null;
+    }
 
     const initialize = () => {
       if (cancelled || !window.google?.accounts?.id || !googleButtonRef.current) {
@@ -153,6 +186,7 @@ function SignInPage() {
         shape: "pill",
         width: "100%",
         logo_alignment: "left",
+        locale: googleLocale,
       });
       setGoogleLoaded(true);
     };
@@ -170,7 +204,7 @@ function SignInPage() {
     }
 
     const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
+    script.src = desiredScriptSrc;
     script.async = true;
     script.defer = true;
     script.dataset.googleIdentity = "true";
@@ -181,7 +215,7 @@ function SignInPage() {
     return () => {
       cancelled = true;
     };
-  }, [googleProvider.clientId, googleProvider.strategy, signInWithGoogle, t]);
+  }, [authIntent, googleProvider.clientId, googleProvider.strategy, lang, signInWithGoogle, t]);
 
   const submitSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,7 +258,7 @@ function SignInPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.href,
+        redirectTo: buildSignInCallbackUrl(),
       },
     });
 
@@ -246,7 +280,7 @@ function SignInPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "facebook",
         options: {
-          redirectTo: window.location.href,
+          redirectTo: buildSignInCallbackUrl(),
         },
       });
 
@@ -296,6 +330,37 @@ function SignInPage() {
     } catch {
       setAuthError(t("auth.facebookFailed"));
     }
+  };
+
+  const submitForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError(null);
+    setForgotSuccess(null);
+
+    const email = (forgotEmail || signInData.credential).trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      setForgotError(t("auth.resetEmailRequired"));
+      return;
+    }
+
+    const supabase = await getSupabaseBrowserClient();
+    if (!supabase) {
+      setForgotError(t("auth.resetUnavailable"));
+      return;
+    }
+
+    setSendingReset(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: buildResetPasswordUrl(),
+    });
+
+    if (error) {
+      setForgotError(error.message || t("auth.resetFailed"));
+    } else {
+      setForgotSuccess(t("auth.resetSent"));
+      setForgotEmail(email);
+    }
+    setSendingReset(false);
   };
 
   return (
@@ -441,6 +506,53 @@ function SignInPage() {
                         className="mt-1.5 h-11 rounded-xl"
                       />
                     </div>
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForgotError(null);
+                          setForgotSuccess(null);
+                          setShowForgotPassword((current) => !current);
+                        }}
+                        className="text-sm font-semibold text-primary hover:underline"
+                      >
+                        {t("auth.forgotPassword")}
+                      </button>
+                    </div>
+                    {showForgotPassword && (
+                      <div className="rounded-2xl border border-border bg-background p-4">
+                        <div className="text-sm font-bold text-foreground">{t("auth.resetTitle")}</div>
+                        <p className="mt-1 text-sm text-muted-foreground">{t("auth.resetBody")}</p>
+                        <form onSubmit={submitForgotPassword} className="mt-4 space-y-3">
+                          <div>
+                            <Label htmlFor="reset-email">{t("auth.resetEmail")}</Label>
+                            <Input
+                              id="reset-email"
+                              type="email"
+                              required
+                              value={forgotEmail}
+                              onChange={(e) => setForgotEmail(e.target.value)}
+                              placeholder={t("signin.emailPh")}
+                              className="mt-1.5 h-11 rounded-xl"
+                            />
+                          </div>
+                          {forgotError && <AuthError message={forgotError} />}
+                          {forgotSuccess && (
+                            <div className="rounded-xl border border-primary/20 bg-primary/8 px-4 py-3 text-sm text-primary">
+                              {forgotSuccess}
+                            </div>
+                          )}
+                          <Button
+                            type="submit"
+                            variant="outline"
+                            className="w-full rounded-full"
+                            disabled={sendingReset}
+                          >
+                            {sendingReset ? t("ui.processing") : t("auth.resetLink")}
+                          </Button>
+                        </form>
+                      </div>
+                    )}
                   </>
                 )}
                 {authError && <AuthError message={authError} />}

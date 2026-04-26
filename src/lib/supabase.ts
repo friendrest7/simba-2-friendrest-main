@@ -11,6 +11,43 @@ export function hasSupabaseConfig() {
   return Boolean(supabaseUrl && supabasePublishableKey);
 }
 
+function normalizeSiteUrl(value: string) {
+  let url = value.trim();
+  if (!url) {
+    return "http://localhost:5173/";
+  }
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    url = `https://${url}`;
+  }
+  return url.endsWith("/") ? url : `${url}/`;
+}
+
+export function getPublicSiteUrl() {
+  if (typeof window !== "undefined" && window.location.origin) {
+    return normalizeSiteUrl(window.location.origin);
+  }
+
+  const fallbackUrl =
+    import.meta.env.VITE_PUBLIC_SITE_URL ??
+    import.meta.env.VITE_SITE_URL ??
+    "http://localhost:5173";
+
+  return normalizeSiteUrl(fallbackUrl);
+}
+
+export function createBrowserRedirectUrl(
+  path: string,
+  search?: Record<string, string | undefined>,
+) {
+  const url = new URL(path.startsWith("/") ? path.slice(1) : path, getPublicSiteUrl());
+  Object.entries(search ?? {}).forEach(([key, value]) => {
+    if (value) {
+      url.searchParams.set(key, value);
+    }
+  });
+  return url.toString();
+}
+
 export async function getSupabaseBrowserClient() {
   if (!hasSupabaseConfig()) {
     return null;

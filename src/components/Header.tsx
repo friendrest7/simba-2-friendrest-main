@@ -36,6 +36,10 @@ export function Header() {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
   const selectedBranchMapUrl = getBranchMapUrl(selectedBranch);
+  const signInRedirect =
+    typeof window !== "undefined"
+      ? `${window.location.pathname}${window.location.search}`
+      : "/";
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,7 +205,10 @@ export function Header() {
           </DropdownMenu>
         ) : (
           <Button asChild variant="ghost" className="rounded-full gap-2 text-primary-foreground hover:bg-white/12 hover:text-primary-foreground">
-            <Link to="/signin">
+            <Link
+              to="/signin"
+              search={signInRedirect !== "/signin" ? ({ redirect: signInRedirect } as never) : undefined}
+            >
               <UserIcon className="h-4 w-4 text-primary-foreground" />
               <span className="hidden font-semibold sm:inline">{t("nav.signin")}</span>
             </Link>

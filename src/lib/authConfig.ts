@@ -55,6 +55,7 @@ export function getAuthConfig(): AuthConfig {
   const supabaseGoogle = supabaseProviderEnabled("google");
   const supabaseFacebook = supabaseProviderEnabled("facebook");
   const phoneOtpEnabled = supabaseProviderEnabled("phone") || (supabaseReady && envFlag(import.meta.env.VITE_ENABLE_PHONE_OTP));
+  const forceGoogleIdentity = envFlag(import.meta.env.VITE_FORCE_GOOGLE_IDENTITY);
 
   return {
     providers: {
@@ -71,20 +72,20 @@ export function getAuthConfig(): AuthConfig {
             enabled: false,
             reason: "missing VITE_ENABLE_PHONE_OTP=true or VITE_SUPABASE_AUTH_PROVIDERS=phone",
           },
-      google: googleClientId
+      google: supabaseGoogle && !forceGoogleIdentity
+        ? {
+            enabled: true,
+            strategy: "supabase-oauth",
+          }
+        : googleClientId
         ? {
             enabled: true,
             strategy: "google-identity",
             clientId: googleClientId,
           }
-        : supabaseGoogle
-          ? {
-              enabled: true,
-              strategy: "supabase-oauth",
-            }
           : {
               enabled: false,
-              reason: "missing VITE_GOOGLE_CLIENT_ID or VITE_SUPABASE_AUTH_PROVIDERS=google",
+              reason: "missing VITE_SUPABASE_AUTH_PROVIDERS=google or VITE_GOOGLE_CLIENT_ID",
             },
       facebook: supabaseFacebook
         ? {
