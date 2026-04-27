@@ -13,8 +13,7 @@ export function SlideToVerify({ onVerified }: { onVerified: () => void }) {
 
   const KNOB = 48;
 
-  const trackWidth = () =>
-    (trackRef.current?.clientWidth ?? 320) - KNOB - 8;
+  const trackWidth = () => (trackRef.current?.clientWidth ?? 320) - KNOB - 8;
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (done) return;
@@ -63,7 +62,9 @@ export function SlideToVerify({ onVerified }: { onVerified: () => void }) {
         />
         {/* hint label */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className={`text-sm font-bold tracking-wide transition-opacity ${done ? "text-white" : "text-white/90"}`}>
+          <span
+            className={`text-sm font-bold tracking-wide transition-opacity ${done ? "text-white" : "text-white/90"}`}
+          >
             {done ? t("verify.entering") : t("verify.slide")}
           </span>
         </div>
@@ -78,7 +79,11 @@ export function SlideToVerify({ onVerified }: { onVerified: () => void }) {
             !dragging && !done ? "transition-transform" : ""
           }`}
         >
-          {done ? <Check className="h-6 w-6 text-success" /> : <ChevronsRight className="h-6 w-6" />}
+          {done ? (
+            <Check className="h-6 w-6 text-success" />
+          ) : (
+            <ChevronsRight className="h-6 w-6" />
+          )}
         </div>
       </div>
       <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-white/70">

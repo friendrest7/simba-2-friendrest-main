@@ -13,6 +13,8 @@ import { Route as SigninRouteImport } from './routes/signin'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProductsRouteImport } from './routes/products'
+import { Route as OrderConfirmationRouteImport } from './routes/order-confirmation'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ClientDashboardRouteImport } from './routes/client-dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
@@ -41,6 +43,16 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const ProductsRoute = ProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrderConfirmationRoute = OrderConfirmationRouteImport.update({
+  id: '/order-confirmation',
+  path: '/order-confirmation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientDashboardRoute = ClientDashboardRouteImport.update({
@@ -97,6 +109,8 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/client-dashboard': typeof ClientDashboardRoute
+  '/dashboard': typeof DashboardRoute
+  '/order-confirmation': typeof OrderConfirmationRoute
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/shop': typeof ShopRoute
@@ -112,6 +126,8 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/client-dashboard': typeof ClientDashboardRoute
+  '/dashboard': typeof DashboardRoute
+  '/order-confirmation': typeof OrderConfirmationRoute
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/shop': typeof ShopRoute
@@ -128,6 +144,8 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/client-dashboard': typeof ClientDashboardRoute
+  '/dashboard': typeof DashboardRoute
+  '/order-confirmation': typeof OrderConfirmationRoute
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/shop': typeof ShopRoute
@@ -145,6 +163,8 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/client-dashboard'
+    | '/dashboard'
+    | '/order-confirmation'
     | '/products'
     | '/reset-password'
     | '/shop'
@@ -160,6 +180,8 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/client-dashboard'
+    | '/dashboard'
+    | '/order-confirmation'
     | '/products'
     | '/reset-password'
     | '/shop'
@@ -175,6 +197,8 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/client-dashboard'
+    | '/dashboard'
+    | '/order-confirmation'
     | '/products'
     | '/reset-password'
     | '/shop'
@@ -191,6 +215,8 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   ClientDashboardRoute: typeof ClientDashboardRoute
+  DashboardRoute: typeof DashboardRoute
+  OrderConfirmationRoute: typeof OrderConfirmationRoute
   ProductsRoute: typeof ProductsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ShopRoute: typeof ShopRoute
@@ -227,6 +253,20 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/products'
       preLoaderRoute: typeof ProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order-confirmation': {
+      id: '/order-confirmation'
+      path: '/order-confirmation'
+      fullPath: '/order-confirmation'
+      preLoaderRoute: typeof OrderConfirmationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/client-dashboard': {
@@ -303,6 +343,8 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   ClientDashboardRoute: ClientDashboardRoute,
+  DashboardRoute: DashboardRoute,
+  OrderConfirmationRoute: OrderConfirmationRoute,
   ProductsRoute: ProductsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ShopRoute: ShopRoute,

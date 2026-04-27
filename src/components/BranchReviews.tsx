@@ -2,14 +2,8 @@ import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
-import {
-  type BranchName,
-} from "@/lib/demo-store";
-import {
-  addBranchReview,
-  getBranchReviewSummary,
-  getBranchReviews,
-} from "@/lib/data";
+import { type BranchName } from "@/lib/demo-store";
+import { addBranchReview, getBranchReviewSummary, getBranchReviews } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,9 +75,7 @@ export function BranchReviews({ branch }: { branch: BranchName }) {
           <h2 className="mt-1 text-2xl font-black tracking-tight">{t("reviews.title")}</h2>
           <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
             <Stars rating={summary.average} />
-            <span>
-              {summary.average > 0 ? summary.average.toFixed(1) : "0.0"} / 5
-            </span>
+            <span>{summary.average > 0 ? summary.average.toFixed(1) : "0.0"} / 5</span>
             <span>({summary.count})</span>
           </div>
         </div>
@@ -151,7 +143,11 @@ export function BranchReviews({ branch }: { branch: BranchName }) {
                 className="mt-1.5 min-h-28 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none"
               />
             </div>
-            <Button type="button" onClick={submitReview} className="w-full rounded-full gradient-brand text-brand-foreground hover:opacity-90">
+            <Button
+              type="button"
+              onClick={submitReview}
+              className="w-full rounded-full gradient-brand text-brand-foreground hover:opacity-90"
+            >
               {t("reviews.submit")}
             </Button>
           </div>

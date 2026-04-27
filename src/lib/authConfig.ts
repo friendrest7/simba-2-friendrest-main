@@ -54,7 +54,9 @@ export function getAuthConfig(): AuthConfig {
   const facebookAppId = envValue(import.meta.env.VITE_FACEBOOK_APP_ID);
   const supabaseGoogle = supabaseProviderEnabled("google");
   const supabaseFacebook = supabaseProviderEnabled("facebook");
-  const phoneOtpEnabled = supabaseProviderEnabled("phone") || (supabaseReady && envFlag(import.meta.env.VITE_ENABLE_PHONE_OTP));
+  const phoneOtpEnabled =
+    supabaseProviderEnabled("phone") ||
+    (supabaseReady && envFlag(import.meta.env.VITE_ENABLE_PHONE_OTP));
   const forceGoogleIdentity = envFlag(import.meta.env.VITE_FORCE_GOOGLE_IDENTITY);
 
   return {
@@ -72,21 +74,22 @@ export function getAuthConfig(): AuthConfig {
             enabled: false,
             reason: "missing VITE_ENABLE_PHONE_OTP=true or VITE_SUPABASE_AUTH_PROVIDERS=phone",
           },
-      google: supabaseGoogle && !forceGoogleIdentity
-        ? {
-            enabled: true,
-            strategy: "supabase-oauth",
-          }
-        : googleClientId
-        ? {
-            enabled: true,
-            strategy: "google-identity",
-            clientId: googleClientId,
-          }
-          : {
-              enabled: false,
-              reason: "missing VITE_SUPABASE_AUTH_PROVIDERS=google or VITE_GOOGLE_CLIENT_ID",
-            },
+      google:
+        supabaseGoogle && !forceGoogleIdentity
+          ? {
+              enabled: true,
+              strategy: "supabase-oauth",
+            }
+          : googleClientId
+            ? {
+                enabled: true,
+                strategy: "google-identity",
+                clientId: googleClientId,
+              }
+            : {
+                enabled: false,
+                reason: "missing VITE_SUPABASE_AUTH_PROVIDERS=google or VITE_GOOGLE_CLIENT_ID",
+              },
       facebook: supabaseFacebook
         ? {
             enabled: true,

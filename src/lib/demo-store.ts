@@ -210,13 +210,28 @@ const STOP_WORDS = new Set([
 ]);
 
 const CATEGORY_KEYWORDS: Array<{ category: string; words: string[] }> = [
-  { category: "Food Products", words: ["food", "groceries", "grocery", "bread", "rice", "milk", "cereal", "snack"] },
-  { category: "Alcoholic Drinks", words: ["drink", "drinks", "wine", "beer", "soda", "juice", "oil", "water"] },
-  { category: "Cleaning & Sanitary", words: ["clean", "cleaning", "soap", "detergent", "tissue", "sanitary"] },
+  {
+    category: "Food Products",
+    words: ["food", "groceries", "grocery", "bread", "rice", "milk", "cereal", "snack"],
+  },
+  {
+    category: "Alcoholic Drinks",
+    words: ["drink", "drinks", "wine", "beer", "soda", "juice", "oil", "water"],
+  },
+  {
+    category: "Cleaning & Sanitary",
+    words: ["clean", "cleaning", "soap", "detergent", "tissue", "sanitary"],
+  },
   { category: "Baby Products", words: ["baby", "diaper", "wipes", "formula", "toy", "kids"] },
-  { category: "Cosmetics & Personal Care", words: ["cosmetic", "beauty", "care", "personal", "shampoo", "cream"] },
+  {
+    category: "Cosmetics & Personal Care",
+    words: ["cosmetic", "beauty", "care", "personal", "shampoo", "cream"],
+  },
   { category: "General", words: ["general", "essentials", "everyday", "office", "battery"] },
-  { category: "Kitchenware & Electronics", words: ["kitchen", "electronics", "electronic", "fruit", "pan", "appliance"] },
+  {
+    category: "Kitchenware & Electronics",
+    words: ["kitchen", "electronics", "electronic", "fruit", "pan", "appliance"],
+  },
   { category: "Kitchen Storage", words: ["storage", "container", "jar"] },
   { category: "Sports & Wellness", words: ["sports", "wellness", "fitness", "gym"] },
 ];
@@ -416,9 +431,7 @@ function seededVisibility(productId: number, branchIndex: number, stock: number)
 }
 
 function guessBrand(name: string) {
-  const token = name
-    .split(/\s+/)
-    .find((word) => word.length > 2 && /[a-z0-9]/i.test(word));
+  const token = name.split(/\s+/).find((word) => word.length > 2 && /[a-z0-9]/i.test(word));
   return token?.replace(/[^a-z0-9]/gi, "") || "Simba";
 }
 
@@ -528,7 +541,10 @@ function createInitialOrders(catalog: CatalogProduct[]): OrderRecord[] {
       pickupSlot: fulfillmentMethod === "pickup" ? "16:00 - 18:00" : undefined,
       paymentMethod: fulfillmentMethod === "delivery" ? "momo" : "cash",
       paymentPhone: "0788000100",
-      notes: fulfillmentMethod === "delivery" ? "Call on arrival at the gate." : "Pickup from express counter.",
+      notes:
+        fulfillmentMethod === "delivery"
+          ? "Call on arrival at the gate."
+          : "Pickup from express counter.",
       customerId: `seed-${id.toLowerCase()}`,
       customerName,
       customerEmail: `${customerName.toLowerCase().replace(/\s+/g, ".")}@simba.demo`,
@@ -747,7 +763,8 @@ function createInitialState(): DemoState {
         rating: 5,
         authorName: "Nadine",
         title: "Fast collection and clean handoff",
-        comment: "The order was packed well, ready on time, and the desk team handled pickup in under two minutes.",
+        comment:
+          "The order was packed well, ready on time, and the desk team handled pickup in under two minutes.",
         createdAt: daysAgo(2, 11, 20),
       },
       {
@@ -756,7 +773,8 @@ function createInitialState(): DemoState {
         rating: 4,
         authorName: "Eric",
         title: "Strong stock availability",
-        comment: "Most staple products were available and the branch team confirmed replacements quickly when one item ran low.",
+        comment:
+          "Most staple products were available and the branch team confirmed replacements quickly when one item ran low.",
         createdAt: daysAgo(3, 16, 10),
       },
       {
@@ -765,7 +783,8 @@ function createInitialState(): DemoState {
         rating: 5,
         authorName: "Aline",
         title: "Smooth premium service",
-        comment: "The branch felt organized, with clear messaging and a fast handover once I arrived.",
+        comment:
+          "The branch felt organized, with clear messaging and a fast handover once I arrived.",
         createdAt: daysAgo(5, 9, 35),
       },
     ],
@@ -800,7 +819,14 @@ function normalizeInventory(
         branch,
         catalog.map((product) => ({
           productId: product.id,
-          stock: Math.max(0, Math.round(rowMap.get(product.id)?.stock ?? seeded[branch].find((seed) => seed.productId === product.id)?.stock ?? 0)),
+          stock: Math.max(
+            0,
+            Math.round(
+              rowMap.get(product.id)?.stock ??
+                seeded[branch].find((seed) => seed.productId === product.id)?.stock ??
+                0,
+            ),
+          ),
           updatedAt: rowMap.get(product.id)?.updatedAt ?? nowIso(),
         })),
       ];
@@ -823,7 +849,10 @@ function normalizeStorefront(
         catalog.map((product) => ({
           branch,
           productId: product.id,
-          isVisible: rowMap.get(product.id)?.isVisible ?? seeded[branch].find((seed) => seed.productId === product.id)?.isVisible ?? false,
+          isVisible:
+            rowMap.get(product.id)?.isVisible ??
+            seeded[branch].find((seed) => seed.productId === product.id)?.isVisible ??
+            false,
           updatedAt: rowMap.get(product.id)?.updatedAt ?? nowIso(),
         })),
       ];
@@ -1114,7 +1143,16 @@ export function createCatalogProduct(input: {
     unit,
     brand,
     description,
-    tags: createProductTags({ id: nextId, name, price, category, subcategoryId: 9999, inStock: true, image: input.image?.trim() || "", unit }),
+    tags: createProductTags({
+      id: nextId,
+      name,
+      price,
+      category,
+      subcategoryId: 9999,
+      inStock: true,
+      image: input.image?.trim() || "",
+      unit,
+    }),
     featured: Boolean(input.featured),
     createdAt: nowIso(),
     updatedAt: nowIso(),
@@ -1157,7 +1195,12 @@ export function createCatalogProduct(input: {
 
 export function updateCatalogProduct(
   productId: number,
-  input: Partial<Pick<CatalogProduct, "name" | "price" | "category" | "unit" | "image" | "brand" | "description" | "featured">>,
+  input: Partial<
+    Pick<
+      CatalogProduct,
+      "name" | "price" | "category" | "unit" | "image" | "brand" | "description" | "featured"
+    >
+  >,
 ) {
   const existing = findCatalogProduct(productId);
   if (!existing) {
@@ -1246,7 +1289,9 @@ export function updateBranchProfile(
 export function getBranchInventory(branch: BranchName) {
   const state = readState();
   const stockMap = new Map((state.inventory[branch] ?? []).map((row) => [row.productId, row]));
-  const visibilityMap = new Map((state.storefront[branch] ?? []).map((row) => [row.productId, row.isVisible]));
+  const visibilityMap = new Map(
+    (state.storefront[branch] ?? []).map((row) => [row.productId, row.isVisible]),
+  );
 
   return state.catalog.map((product) => {
     const stockRow = stockMap.get(product.id);
@@ -1311,7 +1356,11 @@ export function updateBranchStock(branch: BranchName, productId: number, nextSto
   return { ok: true as const };
 }
 
-export function setBranchProductVisibility(branch: BranchName, productId: number, isVisible: boolean) {
+export function setBranchProductVisibility(
+  branch: BranchName,
+  productId: number,
+  isVisible: boolean,
+) {
   const stock = getBranchStock(branch, productId);
   if (isVisible && stock <= 0) {
     return { ok: false as const, error: "dashboard.publishRequiresStock" };
@@ -1439,7 +1488,8 @@ export function createPickupOrder(input: {
   });
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const fulfillmentMethod = input.fulfillmentMethod ?? (input.deliveryAddress ? "delivery" : "pickup");
+  const fulfillmentMethod =
+    input.fulfillmentMethod ?? (input.deliveryAddress ? "delivery" : "pickup");
   const deliveryFee = getDeliveryFee(fulfillmentMethod, subtotal);
   const serviceFee = getServiceFee(subtotal);
   const order: OrderRecord = {
@@ -1516,7 +1566,11 @@ export function updateOrderStatus(orderId: string, status: OrderStatus) {
   return { ok: true as const };
 }
 
-export function updateOrderAssignment(orderId: string, nextBranch: BranchName, assignedTo?: string) {
+export function updateOrderAssignment(
+  orderId: string,
+  nextBranch: BranchName,
+  assignedTo?: string,
+) {
   const state = readState();
   const order = state.orders.find((current) => current.id === orderId);
   if (!order) {
@@ -1610,10 +1664,13 @@ export function getDashboardSummary(branches: BranchName[]) {
 
   return {
     totalProducts: state.catalog.length,
-    lowStockCount: inventory.filter((row) => row.stock > 0 && row.stock <= LOW_STOCK_THRESHOLD).length,
+    lowStockCount: inventory.filter((row) => row.stock > 0 && row.stock <= LOW_STOCK_THRESHOLD)
+      .length,
     todayOrders: orders.filter((order) => order.createdAt.slice(0, 10) === today).length,
     pendingOrders: orders.filter((order) =>
-      ["pending", "confirmed", "packing", "out-for-delivery", "ready-for-pickup"].includes(order.status),
+      ["pending", "confirmed", "packing", "out-for-delivery", "ready-for-pickup"].includes(
+        order.status,
+      ),
     ).length,
     completedOrders: orders.filter((order) => order.status === "completed").length,
     orderCount: orders.length,
@@ -1629,7 +1686,9 @@ function parseSearchIntent(query: string, selectedBranch: BranchName): SearchInt
   const minPriceMatch = lower.match(/(?:above|over|from)\s*(\d[\d,]*)/i);
   const maxPrice = maxPriceMatch ? Number(maxPriceMatch[1].replace(/,/g, "")) : undefined;
   const minPrice = minPriceMatch ? Number(minPriceMatch[1].replace(/,/g, "")) : undefined;
-  const category = CATEGORY_KEYWORDS.find(({ words }) => words.some((word) => lower.includes(word)))?.category;
+  const category = CATEGORY_KEYWORDS.find(({ words }) =>
+    words.some((word) => lower.includes(word)),
+  )?.category;
 
   const terms = lower
     .replace(/[^\w\s]/g, " ")
@@ -1653,7 +1712,8 @@ function parseSearchIntent(query: string, selectedBranch: BranchName): SearchInt
 }
 
 function scoreProduct(product: CatalogProduct, terms: string[]) {
-  const haystack = `${product.name} ${product.category} ${product.description} ${product.brand} ${product.tags.join(" ")}`.toLowerCase();
+  const haystack =
+    `${product.name} ${product.category} ${product.description} ${product.brand} ${product.tags.join(" ")}`.toLowerCase();
   return terms.reduce((score, term) => {
     if (product.name.toLowerCase().includes(term)) return score + 7;
     if (product.brand.toLowerCase().includes(term)) return score + 4;
@@ -1662,11 +1722,16 @@ function scoreProduct(product: CatalogProduct, terms: string[]) {
   }, 0);
 }
 
-export function conversationalSearch(query: string, selectedBranch: BranchName): ConversationalSearchResult {
+export function conversationalSearch(
+  query: string,
+  selectedBranch: BranchName,
+): ConversationalSearchResult {
   const intent = parseSearchIntent(query, selectedBranch);
   const branch = intent.branch ?? selectedBranch;
   const products = getSellableProductsForBranch(branch);
-  const stockMap = new Map(getBranchInventory(branch).map((product) => [product.id, product.stock]));
+  const stockMap = new Map(
+    getBranchInventory(branch).map((product) => [product.id, product.stock]),
+  );
 
   let filtered = products.filter((product) => {
     if (intent.category && product.category !== intent.category) return false;

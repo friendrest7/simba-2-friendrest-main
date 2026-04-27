@@ -118,7 +118,11 @@ function ResetPasswordPage() {
             </div>
             <h1 className="mt-5 text-3xl font-black tracking-tight">{t("auth.resetSuccess")}</h1>
             <p className="mt-3 text-sm text-muted-foreground">{t("auth.resetSuccessBody")}</p>
-            <Button asChild size="lg" className="mt-6 rounded-full gradient-brand text-brand-foreground hover:opacity-90">
+            <Button
+              asChild
+              size="lg"
+              className="mt-6 rounded-full gradient-brand text-brand-foreground hover:opacity-90"
+            >
               <Link to="/signin">{t("auth.backToSignIn")}</Link>
             </Button>
           </div>
@@ -181,7 +185,10 @@ function ResetPasswordPage() {
               </form>
             )}
 
-            <Link to="/signin" className="mt-6 inline-flex text-sm font-semibold text-primary hover:underline">
+            <Link
+              to="/signin"
+              className="mt-6 inline-flex text-sm font-semibold text-primary hover:underline"
+            >
               {t("auth.backToSignIn")}
             </Link>
           </>

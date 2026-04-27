@@ -31,8 +31,9 @@ function AboutPage() {
               Order your basket online and pick it up from your selected branch.
             </p>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-primary-foreground/82">
-              Simba connects customers to real branch stock before checkout. Customers choose a branch,
-              reserve available products, and collect orders with clearer inventory visibility for staff.
+              Simba connects customers to real branch stock before checkout. Customers choose a
+              branch, reserve available products, and collect orders with clearer inventory
+              visibility for staff.
             </p>
           </div>
           <div className="grid content-center gap-4 bg-background p-8 sm:p-10">
@@ -58,11 +59,16 @@ function AboutPage() {
       <section className="mt-8 rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Branch maps</p>
-            <h2 className="mt-2 text-2xl font-black tracking-tight">Open directions to a Simba branch</h2>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">
+              Branch maps
+            </p>
+            <h2 className="mt-2 text-2xl font-black tracking-tight">
+              Open directions to a Simba branch
+            </h2>
           </div>
           <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-            Use these branch links for pickup planning. The navbar location icon opens the map for the currently selected branch.
+            Use these branch links for pickup planning. The navbar location icon opens the map for
+            the currently selected branch.
           </p>
         </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -92,7 +98,9 @@ function InfoCard({ icon, title, body }: { icon: ReactNode; title: string; body:
   return (
     <div className="rounded-2xl border border-border bg-card p-4">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">{icon}</span>
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          {icon}
+        </span>
         <h2 className="font-black text-foreground">{title}</h2>
       </div>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">{body}</p>

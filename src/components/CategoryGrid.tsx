@@ -17,7 +17,10 @@ export function CategoryGrid() {
             {t("section.categories")}
           </h2>
         </div>
-        <Link to="/products" className="hidden items-center gap-1 text-sm font-bold text-primary md:inline-flex">
+        <Link
+          to="/products"
+          className="hidden items-center gap-1 text-sm font-bold text-primary md:inline-flex"
+        >
           {t("ui.seeAll")}
           <ChevronRight className="h-4 w-4" />
         </Link>
@@ -43,7 +46,9 @@ export function CategoryGrid() {
               {c.emoji}
             </div>
 
-            <div className="mt-4 text-sm font-black leading-tight text-foreground">{categoryLabel(c.name, t)}</div>
+            <div className="mt-4 text-sm font-black leading-tight text-foreground">
+              {categoryLabel(c.name, t)}
+            </div>
             <div className="mt-1 text-[11px] font-medium text-muted-foreground">
               {c.count} {t("section.items")}
             </div>

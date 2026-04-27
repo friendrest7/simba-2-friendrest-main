@@ -59,7 +59,12 @@ declare global {
       api: (
         path: string,
         params: { fields: string },
-        callback: (response: { id?: string; name?: string; email?: string; error?: unknown }) => void,
+        callback: (response: {
+          id?: string;
+          name?: string;
+          email?: string;
+          error?: unknown;
+        }) => void,
       ) => void;
     };
   }

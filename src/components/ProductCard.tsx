@@ -98,7 +98,9 @@ export function ProductCard({ product }: { product: Product }) {
           {product.name}
         </Link>
 
-        <div className="mt-1 text-[11px] font-medium text-muted-foreground">{categoryLabel(product.category, t)}</div>
+        <div className="mt-1 text-[11px] font-medium text-muted-foreground">
+          {categoryLabel(product.category, t)}
+        </div>
         <div className="mt-1 text-[11px] font-semibold text-primary">
           {branchStock} {t("pickup.availableNow")}
         </div>
@@ -106,7 +108,9 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="mt-auto flex items-end justify-between gap-3 pt-3">
           <div>
             <div className="text-base font-black text-primary">{formatRWF(product.price)}</div>
-            <div className="text-[11px] text-muted-foreground">{t("card.unit")} {product.unit}</div>
+            <div className="text-[11px] text-muted-foreground">
+              {t("card.unit")} {product.unit}
+            </div>
           </div>
 
           {qty === 0 ? (

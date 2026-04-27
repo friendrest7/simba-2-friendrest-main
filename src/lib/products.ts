@@ -23,7 +23,7 @@ export const PRODUCTS: Product[] = data.products as Product[];
 const CATEGORY_META: Record<string, { slug: string; emoji: string; color: string }> = {
   "Alcoholic Drinks": { slug: "alcoholic-drinks", emoji: "🍷", color: "oklch(0.55 0.22 15)" },
   "Cosmetics & Personal Care": { slug: "cosmetics", emoji: "💄", color: "oklch(0.7 0.18 350)" },
-  "General": { slug: "general", emoji: "🛒", color: "oklch(0.6 0.18 250)" },
+  General: { slug: "general", emoji: "🛒", color: "oklch(0.6 0.18 250)" },
   "Food Products": { slug: "food", emoji: "🍎", color: "oklch(0.65 0.2 60)" },
   "Kitchenware & Electronics": { slug: "kitchenware", emoji: "🍳", color: "oklch(0.6 0.18 200)" },
   "Cleaning & Sanitary": { slug: "cleaning", emoji: "🧴", color: "oklch(0.65 0.18 180)" },
@@ -62,8 +62,7 @@ export const CATEGORIES: CategoryInfo[] = Object.entries(
   color: CATEGORY_META[name]?.color ?? "oklch(0.5 0.2 295)",
 }));
 
-export const categoryBySlug = (slug: string) =>
-  CATEGORIES.find((c) => c.slug === slug);
+export const categoryBySlug = (slug: string) => CATEGORIES.find((c) => c.slug === slug);
 
 export const productsByCategorySlug = (slug: string) => {
   const cat = categoryBySlug(slug);
@@ -74,7 +73,7 @@ export const productsByCategorySlug = (slug: string) => {
 const CATEGORY_LABEL_KEYS: Record<string, string> = {
   "Alcoholic Drinks": "category.alcoholicDrinks",
   "Cosmetics & Personal Care": "category.cosmetics",
-  "General": "category.general",
+  General: "category.general",
   "Food Products": "category.food",
   "Kitchenware & Electronics": "category.kitchenware",
   "Cleaning & Sanitary": "category.cleaning",
@@ -107,6 +106,13 @@ export const matchesPriceCategory = (price: number, priceCategoryId?: string) =>
 
 export const productById = (id: number) => PRODUCTS.find((p) => p.id === id);
 
+export const productDescription = (product: Product, t?: (key: string) => string) => {
+  const fallback =
+    "Selected from the Simba Supermarket catalog for fast ordering, reliable pricing, and easy delivery tracking.";
+  const intro = t ? t("product.descriptionTemplate") : fallback;
+  return `${intro} ${product.name} comes in ${product.unit.toLowerCase()} packaging under ${product.category.toLowerCase()}.`;
+};
+
 export const formatRWF = (n: number) =>
   new Intl.NumberFormat("en-RW", {
     style: "currency",
@@ -120,6 +126,8 @@ export const searchProducts = (q: string) => {
   return PRODUCTS.filter(
     (p) =>
       p.name.toLowerCase().includes(term) ||
-      p.category.toLowerCase().includes(term),
+      p.category.toLowerCase().includes(term) ||
+      p.unit.toLowerCase().includes(term) ||
+      productDescription(p).toLowerCase().includes(term),
   ).slice(0, 50);
 };

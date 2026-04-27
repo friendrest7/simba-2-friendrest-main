@@ -49,30 +49,52 @@ function ClientDashboardPage() {
               <img src={cartIcon} alt="" className="h-full w-full object-contain" />
             </div>
             <div>
-              <div className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{t("client.dashboard")}</div>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                {t("client.dashboard")}
+              </div>
               <h1 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{user.name}</h1>
               <p className="mt-2 text-sm text-muted-foreground">{user.email}</p>
             </div>
           </div>
-          <Button asChild size="lg" className="rounded-full gradient-brand text-brand-foreground shadow-lg shadow-primary/20 hover:opacity-90">
+          <Button
+            asChild
+            size="lg"
+            className="rounded-full gradient-brand text-brand-foreground shadow-lg shadow-primary/20 hover:opacity-90"
+          >
             <Link to="/products">{t("cart.continue")}</Link>
           </Button>
         </div>
       </section>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <Stat icon={<ShoppingBag className="h-5 w-5" />} label={t("client.totalOrders")} value={String(orders.length)} />
-        <Stat icon={<PackageCheck className="h-5 w-5" />} label={t("client.activeOrders")} value={String(activeOrders)} />
-        <Stat icon={<UserRound className="h-5 w-5" />} label={t("auth.signInTab")} value={t("client.customer")} />
+        <Stat
+          icon={<ShoppingBag className="h-5 w-5" />}
+          label={t("client.totalOrders")}
+          value={String(orders.length)}
+        />
+        <Stat
+          icon={<PackageCheck className="h-5 w-5" />}
+          label={t("client.activeOrders")}
+          value={String(activeOrders)}
+        />
+        <Stat
+          icon={<UserRound className="h-5 w-5" />}
+          label={t("auth.signInTab")}
+          value={t("client.customer")}
+        />
       </div>
 
       <section className="mt-8 rounded-[2rem] border border-border bg-card p-5 shadow-sm md:p-6">
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{t("pickup.summary")}</div>
+            <div className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+              {t("pickup.summary")}
+            </div>
             <h2 className="mt-1 text-2xl font-black tracking-tight">{t("client.recentOrders")}</h2>
           </div>
-          <div className="text-sm text-muted-foreground">{activeOrders} {t("client.activeOrders").toLowerCase()}</div>
+          <div className="text-sm text-muted-foreground">
+            {activeOrders} {t("client.activeOrders").toLowerCase()}
+          </div>
         </div>
         <div className="mt-4 space-y-3">
           {orders.length === 0 ? (
@@ -84,7 +106,10 @@ function ClientDashboardPage() {
             </div>
           ) : (
             orders.slice(0, 8).map((order) => (
-              <div key={order.id} className="rounded-2xl border border-border bg-background/55 p-4 transition hover:border-primary/35 hover:shadow-md">
+              <div
+                key={order.id}
+                className="rounded-2xl border border-border bg-background/55 p-4 transition hover:border-primary/35 hover:shadow-md"
+              >
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
                     <div className="font-bold">#{order.id}</div>
@@ -109,8 +134,12 @@ function ClientDashboardPage() {
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="rounded-[1.75rem] border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">{icon}</div>
-      <div className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        {icon}
+      </div>
+      <div className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+        {label}
+      </div>
       <div className="mt-2 text-2xl font-black">{value}</div>
     </div>
   );

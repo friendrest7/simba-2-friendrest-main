@@ -215,7 +215,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ user, hydrated, signIn, signUp, signInWithGoogle, signInWithFacebook, signOut }}>
+    <Ctx.Provider
+      value={{ user, hydrated, signIn, signUp, signInWithGoogle, signInWithFacebook, signOut }}
+    >
       {children}
     </Ctx.Provider>
   );

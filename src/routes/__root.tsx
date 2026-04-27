@@ -1,6 +1,6 @@
 import { Outlet, createRootRoute, Link } from "@tanstack/react-router";
 import { ThemeProvider } from "@/lib/theme";
-import { I18nProvider } from "@/lib/i18n";
+import { I18nProvider, translate, type Lang } from "@/lib/i18n";
 import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/lib/auth";
 import { Header } from "@/components/Header";
@@ -8,25 +8,40 @@ import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
+  const lang = getStoredLang();
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-extrabold text-gradient-brand">404</h1>
-        <h2 className="mt-4 text-xl font-semibold">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist.
-        </p>
+        <h2 className="mt-4 text-xl font-semibold">{translate(lang, "notFound.title")}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{translate(lang, "notFound.body")}</p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-full gradient-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground"
           >
-            Back to Simba
+            {translate(lang, "notFound.back")}
           </Link>
         </div>
       </div>
     </div>
   );
+}
+
+function getStoredLang(): Lang {
+  if (typeof window === "undefined") {
+    return "en";
+  }
+
+  const savedLang = localStorage.getItem("simba.lang");
+  return savedLang === "fr" ||
+    savedLang === "rw" ||
+    savedLang === "sw" ||
+    savedLang === "tr" ||
+    savedLang === "en"
+    ? savedLang
+    : "en";
 }
 
 export const Route = createRootRoute({
@@ -43,14 +58,16 @@ export const Route = createRootRoute({
       { property: "og:title", content: "Simba Supermarket - Pickup-first grocery demo" },
       {
         property: "og:description",
-        content: "Branch-aware pickup ordering, inventory, reviews, and staff dashboard for Simba 2.0.",
+        content:
+          "Branch-aware pickup ordering, inventory, reviews, and staff dashboard for Simba 2.0.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Simba Supermarket - Pickup-first grocery demo" },
       {
         name: "twitter:description",
-        content: "Branch-aware pickup ordering, inventory, reviews, and staff dashboard for Simba 2.0.",
+        content:
+          "Branch-aware pickup ordering, inventory, reviews, and staff dashboard for Simba 2.0.",
       },
       {
         property: "og:image",

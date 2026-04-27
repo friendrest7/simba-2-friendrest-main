@@ -1,5 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
-import BranchDashboardPage from "@/routes/branch-dashboard";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/admin-dashboard")({
   component: AdminDashboardPage,
@@ -7,5 +6,5 @@ export const Route = createFileRoute("/admin-dashboard")({
 });
 
 function AdminDashboardPage() {
-  return <BranchDashboardPage />;
+  return <Navigate to="/dashboard" />;
 }

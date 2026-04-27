@@ -1,17 +1,28 @@
 import {
   addBranchReview as addLocalReview,
+  createCatalogProduct as createLocalCatalogProduct,
   createPickupOrder as createLocalOrder,
+  deleteCatalogProduct as deleteLocalCatalogProduct,
   getBranchInventory as getLocalBranchInventory,
+  getBranchProfiles as getLocalBranchProfiles,
   getBranchReviewSummary as getLocalBranchReviewSummary,
   getBranchReviews as getLocalBranchReviews,
   getBranchStock as getLocalBranchStock,
+  getCatalogProducts as getLocalCatalogProducts,
   getDashboardSummary as getLocalDashboardSummary,
+  getLowStockProducts as getLocalLowStockProducts,
   getOrdersForBranches as getLocalOrdersForBranches,
   getOrdersForUser as getLocalOrdersForUser,
+  updateBranchProfile as updateLocalBranchProfile,
   updateBranchStock as updateLocalBranchStock,
+  updateCatalogProduct as updateLocalCatalogProduct,
+  updateOrderAssignment as updateLocalOrderAssignment,
   updateOrderStatus as updateLocalOrderStatus,
+  subscribeDemoState as subscribeLocalDemoState,
   type BranchName,
+  type BranchProfile,
   type BranchReview,
+  type CatalogProduct,
   type OrderRecord,
   type OrderStatus,
   type PaymentMethod,
@@ -25,6 +36,28 @@ type BranchInventoryProduct = (typeof PRODUCTS)[number] & {
   stock: number;
   updatedAt: string;
 };
+
+type SupabaseOrderItemRow = {
+  product_id: number;
+  product_name: string;
+  unit_price: number | string;
+  quantity: number;
+};
+
+export type AdminCatalogProduct = CatalogProduct & {
+  branch?: BranchName;
+  stock?: number;
+  updatedAt?: string;
+  isVisible?: boolean;
+  isSellable?: boolean;
+};
+
+const mapSupabaseOrderItem = (item: SupabaseOrderItemRow) => ({
+  productId: item.product_id,
+  name: item.product_name,
+  price: Number(item.unit_price),
+  quantity: item.quantity,
+});
 
 async function requireSupabase() {
   const supabase = await getSupabaseBrowserClient();
@@ -54,6 +87,86 @@ export async function getProfile(userId: string) {
 
   if (error) throw error;
   return data;
+}
+
+export function subscribeDemoState(listener: () => void) {
+  return subscribeLocalDemoState(listener);
+}
+
+export async function getCatalogProducts(): Promise<CatalogProduct[]> {
+  if (!hasSupabaseConfig()) {
+    return getLocalCatalogProducts();
+  }
+
+  return PRODUCTS.map((product) => ({
+    ...product,
+    brand: product.name.split(" ")[0] || "Simba",
+    description: `${product.name} at Simba Supermarket.`,
+    tags: [product.category.toLowerCase()],
+    featured: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }));
+}
+
+export async function createCatalogProduct(input: {
+  name: string;
+  price: number;
+  category: string;
+  unit: string;
+  image?: string;
+  brand?: string;
+  description?: string;
+  featured?: boolean;
+}) {
+  if (!hasSupabaseConfig()) {
+    return createLocalCatalogProduct(input);
+  }
+
+  return { ok: false as const, error: "dashboard.catalogSupabaseUnsupported" };
+}
+
+export async function updateCatalogProduct(
+  productId: number,
+  input: Partial<
+    Pick<
+      CatalogProduct,
+      "name" | "price" | "category" | "unit" | "image" | "brand" | "description" | "featured"
+    >
+  >,
+) {
+  if (!hasSupabaseConfig()) {
+    return updateLocalCatalogProduct(productId, input);
+  }
+
+  return { ok: false as const, error: "dashboard.catalogSupabaseUnsupported" };
+}
+
+export async function deleteCatalogProduct(productId: number) {
+  if (!hasSupabaseConfig()) {
+    return deleteLocalCatalogProduct(productId);
+  }
+
+  return { ok: false as const, error: "dashboard.catalogSupabaseUnsupported" };
+}
+
+export async function getBranchProfiles(): Promise<BranchProfile[]> {
+  if (!hasSupabaseConfig()) {
+    return getLocalBranchProfiles();
+  }
+
+  return getLocalBranchProfiles();
+}
+
+export async function updateBranchProfile(
+  branchName: BranchName,
+  input: Partial<Omit<BranchProfile, "name">>,
+) {
+  if (!hasSupabaseConfig()) {
+    return updateLocalBranchProfile(branchName, input);
+  }
+
+  return { ok: false as const, error: "dashboard.branchSupabaseUnsupported" };
 }
 
 export async function upsertProfile(input: {
@@ -97,7 +210,9 @@ export async function getBranchStock(branch: BranchName, productId: number) {
 
 export async function getBranchStockMap(branch: BranchName) {
   if (!hasSupabaseConfig()) {
-    return Object.fromEntries(PRODUCTS.map((product) => [product.id, getLocalBranchStock(branch, product.id)]));
+    return Object.fromEntries(
+      PRODUCTS.map((product) => [product.id, getLocalBranchStock(branch, product.id)]),
+    );
   }
 
   const supabase = await requireSupabase();
@@ -118,7 +233,10 @@ export async function getBranchStockMap(branch: BranchName) {
 
 export async function getBranchStockMaps(branches: BranchName[]) {
   const maps = Object.fromEntries(
-    branches.map((branch) => [branch, Object.fromEntries(PRODUCTS.map((product) => [product.id, 0]))]),
+    branches.map((branch) => [
+      branch,
+      Object.fromEntries(PRODUCTS.map((product) => [product.id, 0])),
+    ]),
   ) as Record<BranchName, Record<number, number>>;
 
   if (!branches.length) {
@@ -127,7 +245,9 @@ export async function getBranchStockMaps(branches: BranchName[]) {
 
   if (!hasSupabaseConfig()) {
     for (const branch of branches) {
-      maps[branch] = Object.fromEntries(PRODUCTS.map((product) => [product.id, getLocalBranchStock(branch, product.id)]));
+      maps[branch] = Object.fromEntries(
+        PRODUCTS.map((product) => [product.id, getLocalBranchStock(branch, product.id)]),
+      );
     }
     return maps;
   }
@@ -325,7 +445,9 @@ export async function createPickupOrder(input: {
       subtotal,
       total: subtotal,
     })
-    .select("id, order_number, customer_name, customer_email, branch_name, pickup_date, pickup_slot, payment_method, payment_phone, customer_phone, notes, subtotal, total, status, created_at")
+    .select(
+      "id, order_number, customer_name, customer_email, branch_name, pickup_date, pickup_slot, payment_method, payment_phone, customer_phone, notes, subtotal, total, status, created_at",
+    )
     .single();
 
   if (orderError) {
@@ -348,7 +470,11 @@ export async function createPickupOrder(input: {
   }
 
   for (const item of items) {
-    await updateBranchStock(input.branch, item.productId, (stockMap[item.productId] ?? 0) - item.quantity);
+    await updateBranchStock(
+      input.branch,
+      item.productId,
+      (stockMap[item.productId] ?? 0) - item.quantity,
+    );
   }
 
   return {
@@ -389,7 +515,8 @@ export async function getOrdersForBranches(branches: BranchName[]): Promise<Orde
 
   const { data, error } = await supabase
     .from("orders")
-    .select(`
+    .select(
+      `
       id,
       order_number,
       customer_id,
@@ -412,7 +539,8 @@ export async function getOrdersForBranches(branches: BranchName[]): Promise<Orde
         unit_price,
         quantity
       )
-    `)
+    `,
+    )
     .in("branch_name", branches)
     .order("created_at", { ascending: false });
 
@@ -430,12 +558,7 @@ export async function getOrdersForBranches(branches: BranchName[]): Promise<Orde
     customerName: order.customer_name,
     customerEmail: order.customer_email,
     customerPhone: order.customer_phone,
-    items: (order.order_items ?? []).map((item: any) => ({
-      productId: item.product_id,
-      name: item.product_name,
-      price: Number(item.unit_price),
-      quantity: item.quantity,
-    })),
+    items: ((order.order_items ?? []) as SupabaseOrderItemRow[]).map(mapSupabaseOrderItem),
     subtotal: Number(order.subtotal),
     total: Number(order.total),
     status: order.status as OrderStatus,
@@ -451,7 +574,8 @@ export async function getOrdersForUser(user: SessionUser): Promise<OrderRecord[]
   const supabase = await requireSupabase();
   const { data, error } = await supabase
     .from("orders")
-    .select(`
+    .select(
+      `
       id,
       order_number,
       customer_id,
@@ -474,7 +598,8 @@ export async function getOrdersForUser(user: SessionUser): Promise<OrderRecord[]
         unit_price,
         quantity
       )
-    `)
+    `,
+    )
     .eq("customer_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -492,12 +617,7 @@ export async function getOrdersForUser(user: SessionUser): Promise<OrderRecord[]
     customerName: order.customer_name,
     customerEmail: order.customer_email,
     customerPhone: order.customer_phone,
-    items: (order.order_items ?? []).map((item: any) => ({
-      productId: item.product_id,
-      name: item.product_name,
-      price: Number(item.unit_price),
-      quantity: item.quantity,
-    })),
+    items: ((order.order_items ?? []) as SupabaseOrderItemRow[]).map(mapSupabaseOrderItem),
     subtotal: Number(order.subtotal),
     total: Number(order.total),
     status: order.status as OrderStatus,
@@ -511,9 +631,24 @@ export async function updateOrderStatus(orderNumber: string, status: OrderStatus
   }
 
   const supabase = await requireSupabase();
-  const { error } = await supabase.from("orders").update({ status }).eq("order_number", orderNumber);
+  const { error } = await supabase
+    .from("orders")
+    .update({ status })
+    .eq("order_number", orderNumber);
   if (error) throw error;
   return { ok: true as const };
+}
+
+export async function updateOrderAssignment(
+  orderId: string,
+  nextBranch: BranchName,
+  assignedTo?: string,
+) {
+  if (!hasSupabaseConfig()) {
+    return updateLocalOrderAssignment(orderId, nextBranch, assignedTo);
+  }
+
+  return { ok: false as const, error: "dashboard.orderSupabaseUnsupported" };
 }
 
 export async function getDashboardSummary(branches: BranchName[]) {
@@ -531,4 +666,24 @@ export async function getDashboardSummary(branches: BranchName[]) {
     lowStockCount: flatInventory.filter((row) => row.stock > 0 && row.stock <= 3).length,
     zeroStockCount: flatInventory.filter((row) => row.stock === 0).length,
   };
+}
+
+export async function getLowStockProducts(branches: BranchName[]) {
+  if (!hasSupabaseConfig()) {
+    return getLocalLowStockProducts(branches);
+  }
+
+  const inventory = await Promise.all(branches.map((branch) => getBranchInventory(branch)));
+  return inventory
+    .flat()
+    .filter((row) => row.stock > 0 && row.stock <= 6)
+    .sort((a, b) => a.stock - b.stock || a.name.localeCompare(b.name))
+    .map((row) => ({
+      branch: row.branch,
+      productId: row.id,
+      name: row.name,
+      stock: row.stock,
+      price: row.price,
+      updatedAt: row.updatedAt,
+    }));
 }

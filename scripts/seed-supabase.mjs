@@ -22,7 +22,9 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
   },
 });
 
-const productData = JSON.parse(readFileSync(join(root, "src", "data", "simba_products.json"), "utf8"));
+const productData = JSON.parse(
+  readFileSync(join(root, "src", "data", "simba_products.json"), "utf8"),
+);
 const products = productData.products.map((product) => ({
   id: product.id,
   name: product.name,
@@ -134,7 +136,10 @@ function loadEnvFile(path) {
 
     const separator = trimmed.indexOf("=");
     const key = trimmed.slice(0, separator).trim();
-    const value = trimmed.slice(separator + 1).trim().replace(/^["']|["']$/g, "");
+    const value = trimmed
+      .slice(separator + 1)
+      .trim()
+      .replace(/^["']|["']$/g, "");
     process.env[key] ??= value;
   }
 }

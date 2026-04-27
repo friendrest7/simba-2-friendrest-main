@@ -24,5 +24,17 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    files: [
+      "src/components/ui/**/*.{ts,tsx}",
+      "src/lib/auth.tsx",
+      "src/lib/cart.tsx",
+      "src/lib/i18n.tsx",
+      "src/lib/theme.tsx",
+    ],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
   eslintPluginPrettier,
 );

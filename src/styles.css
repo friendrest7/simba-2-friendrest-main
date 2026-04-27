@@ -313,7 +313,8 @@
   * {
     border-color: var(--color-border);
   }
-  html, body {
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -324,8 +325,7 @@
 
 /* Futuristic glow utilities */
 @utility glow-primary {
-  box-shadow:
-    0 0 16px -4px color-mix(in oklab, var(--primary) 50%, transparent);
+  box-shadow: 0 0 16px -4px color-mix(in oklab, var(--primary) 50%, transparent);
 }
 
 @utility gradient-brand {
@@ -338,5 +338,7 @@
 
 @utility scrollbar-hide {
   scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

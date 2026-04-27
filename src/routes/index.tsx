@@ -5,12 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ProductCard } from "@/components/ProductCard";
 import { BranchReviews } from "@/components/BranchReviews";
-import { landingPanelContent } from "@/content/landing-panel";
 import { useCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n";
-import { conversationalSearch, PICKUP_BRANCHES, type BranchName } from "@/lib/demo-store";
-import { formatSearchExplanation } from "@/lib/search-explanation";
-import { getBranchMapUrl } from "@/lib/branchLocations";
+import { PICKUP_BRANCHES, type BranchName } from "@/lib/demo-store";
+import { searchProducts } from "@/lib/products";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -28,26 +26,20 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const { t } = useI18n();
-  const { count, subtotal, selectedBranch, setSelectedBranch } = useCart();
+  const { selectedBranch, setSelectedBranch } = useCart();
   const navigate = useNavigate();
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
   const [q, setQ] = useState("");
   const [draftPrompt, setDraftPrompt] = useState("");
 
-  const featuredSearch = useMemo(
-    () => conversationalSearch(q || landingPanelContent.defaultSearchTerms, selectedBranch),
-    [q, selectedBranch],
+  const featuredResults = useMemo(
+    () => searchProducts(q || t("landing.defaultSearch")).slice(0, 10),
+    [q, t],
   );
-
-  const featuredResults = featuredSearch.products.slice(0, 10);
-  const promptSuggestions = landingPanelContent.suggestions;
-
-  const openBranchMap = (branch: BranchName) => {
-    setSelectedBranch(branch);
-    if (window.confirm(`Open ${branch} branch in Google Maps?`)) {
-      window.open(getBranchMapUrl(branch), "_blank", "noopener,noreferrer");
-    }
-  };
+  const promptSuggestions = t("landing.suggestions")
+    .split("|")
+    .map((item) => item.trim())
+    .filter(Boolean);
 
   useEffect(() => {
     if (heroVideoRef.current) {
@@ -92,7 +84,7 @@ function HomePage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <div className="text-xs font-bold uppercase tracking-[0.18em] text-brand-yellow">
-                    {landingPanelContent.label}
+                    {t("landing.panelLabel")}
                   </div>
                 </div>
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
@@ -100,33 +92,36 @@ function HomePage() {
                 </div>
               </div>
 
-              <form className="mt-3 grid gap-2.5 lg:grid-cols-[1.5fr_0.85fr] lg:items-start" onSubmit={submitPrompt}>
+              <form
+                className="mt-3 grid gap-2.5 lg:grid-cols-[1.5fr_0.85fr] lg:items-start"
+                onSubmit={submitPrompt}
+              >
                 <div className="grid gap-3">
-                <Textarea
-                  value={draftPrompt}
-                  onChange={(e) => setDraftPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      e.currentTarget.form?.requestSubmit();
-                    }
-                  }}
-                  placeholder={landingPanelContent.placeholder}
-                  rows={2}
-                  className="min-h-[58px] rounded-[1.1rem] border-0 bg-white px-3.5 py-2.5 text-sm text-black shadow-none placeholder:text-black/45 focus-visible:ring-2 focus-visible:ring-brand-yellow/60"
-                />
-                <div className="flex flex-wrap gap-1.5">
-                  {promptSuggestions.map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      type="button"
-                      onClick={() => setDraftPrompt(suggestion)}
-                      className="rounded-full border border-white/12 bg-white/8 px-2.5 py-1 text-[11px] font-semibold text-white/85 transition hover:bg-white/14"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
+                  <Textarea
+                    value={draftPrompt}
+                    onChange={(e) => setDraftPrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        e.currentTarget.form?.requestSubmit();
+                      }
+                    }}
+                    placeholder={t("landing.placeholder")}
+                    rows={2}
+                    className="min-h-[58px] rounded-[1.1rem] border-0 bg-white px-3.5 py-2.5 text-sm text-black shadow-none placeholder:text-black/45 focus-visible:ring-2 focus-visible:ring-brand-yellow/60"
+                  />
+                  <div className="flex flex-wrap gap-1.5">
+                    {promptSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => setDraftPrompt(suggestion)}
+                        className="rounded-full border border-white/12 bg-white/8 px-2.5 py-1 text-[11px] font-semibold text-white/85 transition hover:bg-white/14"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div className="grid gap-3 lg:self-stretch">
                   <select
@@ -144,11 +139,11 @@ function HomePage() {
                     type="submit"
                     className="h-10 rounded-xl bg-brand-yellow px-4 text-xs font-extrabold text-black shadow-lg shadow-black/20 hover:bg-brand-yellow/90"
                   >
-                    {landingPanelContent.actionLabel}
+                    {t("landing.startShopping")}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                   <p className="text-[11px] leading-5 text-white/72 lg:pt-0.5">
-                    {landingPanelContent.title}
+                    {t("landing.panelTitle")}
                   </p>
                 </div>
               </form>
@@ -161,11 +156,19 @@ function HomePage() {
         <div className="rounded-[2rem] border border-border bg-card p-5 shadow-sm">
           <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
-              <div className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{t("products.aiTitle")}</div>
-              <h2 className="mt-1 text-2xl font-black tracking-tight">{t("products.resultsForBranch")} {selectedBranch}</h2>
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                {t("products.aiTitle")}
+              </div>
+              <h2 className="mt-1 text-2xl font-black tracking-tight">
+                {t("products.resultsForBranch")} {selectedBranch}
+              </h2>
               <p className="mt-2 text-sm text-muted-foreground">{t("products.aiExamples")}</p>
             </div>
-            <Link to="/products" search={{ q } as never} className="text-sm font-bold text-primary hover:underline">
+            <Link
+              to="/products"
+              search={{ q } as never}
+              className="text-sm font-bold text-primary hover:underline"
+            >
               {t("ui.browseAll")}
             </Link>
           </div>

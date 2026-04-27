@@ -11,7 +11,7 @@ import {
   getSupabaseBrowserClient,
   hasSupabaseConfig,
 } from "@/lib/supabase";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LockKeyhole, Mail, ShieldCheck, Sparkles, UserRound } from "lucide-react";
 import type { SessionUser } from "@/lib/demo-store";
 
@@ -22,6 +22,7 @@ type AuthIntent = "client" | "admin";
 const AUTH_INTENT_KEY = "simba.auth.intent";
 const GOOGLE_LOCALE_BY_LANG = {
   en: "en",
+  fr: "fr",
   rw: "rw",
   sw: "sw",
   tr: "tr",
@@ -38,7 +39,8 @@ export const Route = createFileRoute("/signin")({
 
 function SignInPage() {
   const { t, lang } = useI18n();
-  const { user, hydrated, signIn, signUp, signInWithGoogle, signInWithFacebook, signOut } = useAuth();
+  const { user, hydrated, signIn, signUp, signInWithGoogle, signInWithFacebook, signOut } =
+    useAuth();
   const navigate = useNavigate();
   const { redirect, intent } = useSearch({ from: "/signin" }) as SignInSearch;
   const [authError, setAuthError] = useState<string | null>(null);
@@ -61,12 +63,22 @@ function SignInPage() {
 
   const isAdminIntent = authIntent === "admin";
 
-  const dashboardFor = (sessionUser: SessionUser | null) =>
-    sessionUser?.role === "manager" || sessionUser?.role === "staff" ? "/admin-dashboard" : "/client-dashboard";
+  const dashboardFor = useCallback(
+    (sessionUser: SessionUser | null) =>
+      sessionUser?.role === "manager" || sessionUser?.role === "staff"
+        ? "/admin-dashboard"
+        : "/client-dashboard",
+    [],
+  );
 
-  const goNext = (sessionUser: SessionUser | null) => {
-    navigate({ to: (redirect as "/checkout") || (dashboardFor(sessionUser) as "/client-dashboard") });
-  };
+  const goNext = useCallback(
+    (sessionUser: SessionUser | null) => {
+      navigate({
+        to: (redirect as "/checkout") || (dashboardFor(sessionUser) as "/client-dashboard"),
+      });
+    },
+    [dashboardFor, navigate, redirect],
+  );
 
   const switchAuthTab = (nextTab: AuthTab) => {
     setAuthError(null);
@@ -84,17 +96,24 @@ function SignInPage() {
 
   const buildResetPasswordUrl = () => createBrowserRedirectUrl("/reset-password");
 
-  const validateIntentAndRoute = async (sessionUser: SessionUser | null, intent: AuthIntent) => {
-    if (intent === "admin" && sessionUser?.role !== "manager" && sessionUser?.role !== "staff") {
-      await signOut();
-      setAuthError(t("auth.adminRequired"));
-      return;
-    }
+  const validateIntentAndRoute = useCallback(
+    async (sessionUser: SessionUser | null, nextIntent: AuthIntent) => {
+      if (
+        nextIntent === "admin" &&
+        sessionUser?.role !== "manager" &&
+        sessionUser?.role !== "staff"
+      ) {
+        await signOut();
+        setAuthError(t("auth.adminRequired"));
+        return;
+      }
 
-    window.localStorage.removeItem(AUTH_INTENT_KEY);
-    setAuthError(null);
-    goNext(sessionUser);
-  };
+      window.localStorage.removeItem(AUTH_INTENT_KEY);
+      setAuthError(null);
+      goNext(sessionUser);
+    },
+    [goNext, signOut, t],
+  );
 
   useEffect(() => {
     if (intent) {
@@ -103,18 +122,36 @@ function SignInPage() {
   }, [intent]);
 
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const callbackError = readOAuthCallbackError(window.location);
+    if (!callbackError) {
+      return;
+    }
+
+    setAuthError(callbackError);
+  }, []);
+
+  useEffect(() => {
     warnUnconfiguredAuthProviders("signin", ["google", "facebook"]);
   }, []);
 
   useEffect(() => {
     if (hydrated && user) {
-      const storedIntent = (window.localStorage.getItem(AUTH_INTENT_KEY) as AuthIntent | null) ?? authIntent;
+      const storedIntent =
+        (window.localStorage.getItem(AUTH_INTENT_KEY) as AuthIntent | null) ?? authIntent;
       void validateIntentAndRoute(user, storedIntent);
     }
-  }, [hydrated, user]);
+  }, [authIntent, hydrated, user, validateIntentAndRoute]);
 
   useEffect(() => {
-    if (googleProvider.strategy !== "google-identity" || !googleProvider.clientId || !googleButtonRef.current) {
+    if (
+      googleProvider.strategy !== "google-identity" ||
+      !googleProvider.clientId ||
+      !googleButtonRef.current
+    ) {
       return;
     }
 
@@ -122,7 +159,9 @@ function SignInPage() {
     const googleLocale = GOOGLE_LOCALE_BY_LANG[lang];
     let cancelled = false;
     const desiredScriptSrc = `https://accounts.google.com/gsi/client?hl=${encodeURIComponent(googleLocale)}`;
-    let existingScript = document.querySelector<HTMLScriptElement>('script[data-google-identity="true"]');
+    let existingScript = document.querySelector<HTMLScriptElement>(
+      'script[data-google-identity="true"]',
+    );
 
     if (existingScript && existingScript.src !== desiredScriptSrc) {
       existingScript.remove();
@@ -215,7 +254,15 @@ function SignInPage() {
     return () => {
       cancelled = true;
     };
-  }, [authIntent, googleProvider.clientId, googleProvider.strategy, lang, signInWithGoogle, t]);
+  }, [
+    authIntent,
+    googleProvider.clientId,
+    googleProvider.strategy,
+    lang,
+    signInWithGoogle,
+    t,
+    validateIntentAndRoute,
+  ]);
 
   const submitSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -376,7 +423,9 @@ function SignInPage() {
             <Sparkles className="h-4 w-4 text-brand-yellow" />
             Simba 2.0
           </div>
-          <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl">{t("signin.title")}</h1>
+          <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl">
+            {t("signin.title")}
+          </h1>
           <p className="mt-4 max-w-xl text-sm leading-7 text-white/80">
             {redirect === "/checkout" ? t("signin.subtitleCheckout") : t("signin.subtitle")}
           </p>
@@ -415,12 +464,16 @@ function SignInPage() {
                 {hasSocialAuth && (
                   <>
                     <div className="space-y-3">
-                      {googleProvider.strategy === "google-identity" && <div ref={googleButtonRef} className="min-h-11" />}
-                      {googleProvider.strategy === "google-identity" && !googleLoaded && !authError && (
-                        <div className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
-                          {t("auth.googleReady")}
-                        </div>
+                      {googleProvider.strategy === "google-identity" && (
+                        <div ref={googleButtonRef} className="min-h-11" />
                       )}
+                      {googleProvider.strategy === "google-identity" &&
+                        !googleLoaded &&
+                        !authError && (
+                          <div className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
+                            {t("auth.googleReady")}
+                          </div>
+                        )}
                       {googleProvider.strategy === "supabase-oauth" && (
                         <Button
                           type="button"
@@ -489,7 +542,9 @@ function SignInPage() {
                         id="credential"
                         required
                         value={signInData.credential}
-                        onChange={(e) => setSignInData((current) => ({ ...current, credential: e.target.value }))}
+                        onChange={(e) =>
+                          setSignInData((current) => ({ ...current, credential: e.target.value }))
+                        }
                         placeholder="manager@simba.demo"
                         className="mt-1.5 h-11 rounded-xl"
                       />
@@ -501,7 +556,9 @@ function SignInPage() {
                         type="password"
                         required
                         value={signInData.password}
-                        onChange={(e) => setSignInData((current) => ({ ...current, password: e.target.value }))}
+                        onChange={(e) =>
+                          setSignInData((current) => ({ ...current, password: e.target.value }))
+                        }
                         placeholder={t("ui.passwordPlaceholder")}
                         className="mt-1.5 h-11 rounded-xl"
                       />
@@ -521,7 +578,9 @@ function SignInPage() {
                     </div>
                     {showForgotPassword && (
                       <div className="rounded-2xl border border-border bg-background p-4">
-                        <div className="text-sm font-bold text-foreground">{t("auth.resetTitle")}</div>
+                        <div className="text-sm font-bold text-foreground">
+                          {t("auth.resetTitle")}
+                        </div>
                         <p className="mt-1 text-sm text-muted-foreground">{t("auth.resetBody")}</p>
                         <form onSubmit={submitForgotPassword} className="mt-4 space-y-3">
                           <div>
@@ -557,7 +616,11 @@ function SignInPage() {
                 )}
                 {authError && <AuthError message={authError} />}
                 {emailProvider.enabled && (
-                  <Button type="submit" size="lg" className="w-full rounded-full gradient-brand text-brand-foreground hover:opacity-90">
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full rounded-full gradient-brand text-brand-foreground hover:opacity-90"
+                  >
                     {t("signin.cta")}
                   </Button>
                 )}
@@ -583,7 +646,9 @@ function SignInPage() {
                     id="name"
                     required
                     value={signUpData.name}
-                    onChange={(e) => setSignUpData((current) => ({ ...current, name: e.target.value }))}
+                    onChange={(e) =>
+                      setSignUpData((current) => ({ ...current, name: e.target.value }))
+                    }
                     placeholder={t("signin.namePh")}
                     className="mt-1.5 h-11 rounded-xl"
                   />
@@ -595,7 +660,9 @@ function SignInPage() {
                     type="email"
                     required
                     value={signUpData.email}
-                    onChange={(e) => setSignUpData((current) => ({ ...current, email: e.target.value }))}
+                    onChange={(e) =>
+                      setSignUpData((current) => ({ ...current, email: e.target.value }))
+                    }
                     placeholder={t("signin.emailPh")}
                     className="mt-1.5 h-11 rounded-xl"
                   />
@@ -606,7 +673,9 @@ function SignInPage() {
                     id="phone"
                     required
                     value={signUpData.phone}
-                    onChange={(e) => setSignUpData((current) => ({ ...current, phone: e.target.value }))}
+                    onChange={(e) =>
+                      setSignUpData((current) => ({ ...current, phone: e.target.value }))
+                    }
                     placeholder="0788 000 000"
                     className="mt-1.5 h-11 rounded-xl"
                   />
@@ -618,13 +687,19 @@ function SignInPage() {
                     type="password"
                     required
                     value={signUpData.password}
-                    onChange={(e) => setSignUpData((current) => ({ ...current, password: e.target.value }))}
+                    onChange={(e) =>
+                      setSignUpData((current) => ({ ...current, password: e.target.value }))
+                    }
                     placeholder={t("ui.passwordPlaceholder")}
                     className="mt-1.5 h-11 rounded-xl"
                   />
                 </div>
                 {authError && <AuthError message={authError} />}
-                <Button type="submit" size="lg" className="w-full rounded-full gradient-brand text-brand-foreground hover:opacity-90">
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full rounded-full gradient-brand text-brand-foreground hover:opacity-90"
+                >
                   {t("auth.createAccount")}
                 </Button>
                 <div className="text-center text-sm text-muted-foreground">
@@ -643,7 +718,10 @@ function SignInPage() {
           </Tabs>
 
           {!redirect && (
-            <Link to="/" className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
+            <Link
+              to="/"
+              className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+            >
               <Mail className="h-4 w-4" />
               {t("signin.guest")}
             </Link>
@@ -664,7 +742,11 @@ function Feature({ title, body }: { title: string; body: string }) {
 }
 
 function AuthError({ message }: { message: string }) {
-  return <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{message}</div>;
+  return (
+    <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      {message}
+    </div>
+  );
 }
 
 function parseGoogleCredential(credential?: string) {
@@ -711,7 +793,9 @@ function loadFacebookSdk(appId: string) {
   }
 
   return new Promise<void>((resolve, reject) => {
-    const existingScript = document.querySelector<HTMLScriptElement>('script[data-facebook-sdk="true"]');
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[data-facebook-sdk="true"]',
+    );
 
     window.fbAsyncInit = () => {
       window.FB?.init({
@@ -737,4 +821,35 @@ function loadFacebookSdk(appId: string) {
     script.onerror = reject;
     document.body.appendChild(script);
   });
+}
+
+function readOAuthCallbackError(location: Location) {
+  const queryParams = new URLSearchParams(location.search);
+  const hashParams = new URLSearchParams(
+    location.hash.startsWith("#") ? location.hash.slice(1) : location.hash,
+  );
+  const params = [queryParams, hashParams];
+
+  for (const source of params) {
+    const message =
+      source.get("error_description") ??
+      source.get("error_description".replace(/_/g, "-")) ??
+      source.get("error_message") ??
+      source.get("error");
+
+    if (!message) {
+      continue;
+    }
+
+    return decodeOAuthError(message);
+  }
+
+  return null;
+}
+
+function decodeOAuthError(message: string) {
+  return message
+    .replace(/\+/g, " ")
+    .replace(/^OAuth\s+/i, "")
+    .trim();
 }
