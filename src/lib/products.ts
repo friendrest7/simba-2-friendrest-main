@@ -1,4 +1,17 @@
 import data from "@/data/simba_products.json";
+import type { LucideIcon } from "lucide-react";
+import {
+  Apple,
+  Baby,
+  Dumbbell,
+  Droplets,
+  Package,
+  PawPrint,
+  ShoppingBasket,
+  Sparkles,
+  UtensilsCrossed,
+  Wine,
+} from "lucide-react";
 
 export type Product = {
   id: number;
@@ -20,24 +33,61 @@ export const STORE = data.store as {
 
 export const PRODUCTS: Product[] = data.products as Product[];
 
-const CATEGORY_META: Record<string, { slug: string; emoji: string; color: string }> = {
-  "Alcoholic Drinks": { slug: "alcoholic-drinks", emoji: "🍷", color: "oklch(0.55 0.22 15)" },
-  "Cosmetics & Personal Care": { slug: "cosmetics", emoji: "💄", color: "oklch(0.7 0.18 350)" },
-  General: { slug: "general", emoji: "🛒", color: "oklch(0.6 0.18 250)" },
-  "Food Products": { slug: "food", emoji: "🍎", color: "oklch(0.65 0.2 60)" },
-  "Kitchenware & Electronics": { slug: "kitchenware", emoji: "🍳", color: "oklch(0.6 0.18 200)" },
-  "Cleaning & Sanitary": { slug: "cleaning", emoji: "🧴", color: "oklch(0.65 0.18 180)" },
-  "Baby Products": { slug: "baby", emoji: "🧸", color: "oklch(0.7 0.18 30)" },
-  "Pet Care": { slug: "pet", emoji: "🐾", color: "oklch(0.6 0.18 100)" },
-  "Kitchen Storage": { slug: "storage", emoji: "📦", color: "oklch(0.55 0.15 270)" },
-  "Sports & Wellness": { slug: "sports", emoji: "⚽", color: "oklch(0.6 0.2 140)" },
-};
+const CATEGORY_META: Record<string, { slug: string; emoji: string; color: string; icon: LucideIcon }> =
+  {
+    "Alcoholic Drinks": {
+      slug: "alcoholic-drinks",
+      emoji: "🍷",
+      color: "oklch(0.55 0.22 15)",
+      icon: Wine,
+    },
+    "Cosmetics & Personal Care": {
+      slug: "cosmetics",
+      emoji: "💄",
+      color: "oklch(0.7 0.18 350)",
+      icon: Sparkles,
+    },
+    General: {
+      slug: "general",
+      emoji: "🛒",
+      color: "oklch(0.6 0.18 250)",
+      icon: ShoppingBasket,
+    },
+    "Food Products": { slug: "food", emoji: "🍎", color: "oklch(0.65 0.2 60)", icon: Apple },
+    "Kitchenware & Electronics": {
+      slug: "kitchenware",
+      emoji: "🍳",
+      color: "oklch(0.6 0.18 200)",
+      icon: UtensilsCrossed,
+    },
+    "Cleaning & Sanitary": {
+      slug: "cleaning",
+      emoji: "🧴",
+      color: "oklch(0.65 0.18 180)",
+      icon: Droplets,
+    },
+    "Baby Products": { slug: "baby", emoji: "🧸", color: "oklch(0.7 0.18 30)", icon: Baby },
+    "Pet Care": { slug: "pet", emoji: "🐾", color: "oklch(0.6 0.18 100)", icon: PawPrint },
+    "Kitchen Storage": {
+      slug: "storage",
+      emoji: "📦",
+      color: "oklch(0.55 0.15 270)",
+      icon: Package,
+    },
+    "Sports & Wellness": {
+      slug: "sports",
+      emoji: "⚽",
+      color: "oklch(0.6 0.2 140)",
+      icon: Dumbbell,
+    },
+  };
 
 export type CategoryInfo = {
   name: string;
   slug: string;
   emoji: string;
   color: string;
+  icon: LucideIcon;
   count: number;
 };
 
@@ -60,6 +110,7 @@ export const CATEGORIES: CategoryInfo[] = Object.entries(
   slug: CATEGORY_META[name]?.slug ?? name.toLowerCase().replace(/\s+/g, "-"),
   emoji: CATEGORY_META[name]?.emoji ?? "🛍️",
   color: CATEGORY_META[name]?.color ?? "oklch(0.5 0.2 295)",
+  icon: CATEGORY_META[name]?.icon ?? ShoppingBasket,
 }));
 
 export const categoryBySlug = (slug: string) => CATEGORIES.find((c) => c.slug === slug);

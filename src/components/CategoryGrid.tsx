@@ -32,7 +32,7 @@ export function CategoryGrid() {
             key={c.slug}
             to="/category/$slug"
             params={{ slug: c.slug }}
-            className="group relative overflow-hidden rounded-[1.5rem] border border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,244,252,0.94))] p-4 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md"
+            className="group relative overflow-hidden rounded-[1.5rem] border border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,244,252,0.94))] p-4 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md dark:bg-[linear-gradient(180deg,color-mix(in_oklab,var(--card)_96%,white),color-mix(in_oklab,var(--card)_92%,var(--background)))]"
           >
             <div
               className="absolute right-0 top-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full opacity-20 blur-2xl transition-opacity group-hover:opacity-35"
@@ -40,10 +40,10 @@ export function CategoryGrid() {
             />
 
             <div
-              className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-sm"
+              className="flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm"
               style={{ background: `color-mix(in oklab, ${c.color} 16%, var(--background))` }}
             >
-              {c.emoji}
+              <c.icon className="h-6 w-6" style={{ color: c.color }} />
             </div>
 
             <div className="mt-4 text-sm font-black leading-tight text-foreground">

@@ -74,6 +74,7 @@ function CategoryPage() {
     setSort("popular");
     setShowFilters(false);
   };
+  const CategoryIcon = cat.icon;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -94,7 +95,12 @@ function CategoryPage() {
           className="absolute -right-10 -top-10 h-40 w-40 rounded-full opacity-30 blur-3xl"
           style={{ background: cat.color }}
         />
-        <div className="text-6xl">{cat.emoji}</div>
+        <div
+          className="flex h-20 w-20 items-center justify-center rounded-[1.75rem] shadow-sm"
+          style={{ background: `color-mix(in oklab, ${cat.color} 18%, var(--background))` }}
+        >
+          <CategoryIcon className="h-10 w-10" style={{ color: cat.color }} />
+        </div>
         <h1 className="mt-3 text-4xl font-black tracking-tight">{categoryLabel(cat.name, t)}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {allProducts.length} {t("section.items")}
