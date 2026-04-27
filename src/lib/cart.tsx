@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { PICKUP_BRANCHES, type BranchName } from "@/lib/demo-store";
 import type { Product } from "@/lib/products";
 import {
+  getDeliveryFee,
   getStockMap,
   placeOrder,
   subscribeStore,
@@ -19,6 +20,8 @@ const Ctx = createContext<{
   items: CartItem[];
   count: number;
   subtotal: number;
+  deliveryFee: number;
+  total: number;
   hydrated: boolean;
   selectedBranch: BranchName;
   lastOrder: CustomerOrder | null;
@@ -170,6 +173,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const count = items.reduce((sum, item) => sum + item.qty, 0);
   const subtotal = items.reduce((sum, item) => sum + item.qty * item.product.price, 0);
+  const deliveryFee = getDeliveryFee(subtotal);
+  const total = subtotal + deliveryFee;
   const overLimitItems = items
     .map((item) => ({
       product: item.product,
@@ -182,6 +187,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     items,
     count,
     subtotal,
+    deliveryFee,
+    total,
     hydrated,
     selectedBranch,
     lastOrder,

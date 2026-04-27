@@ -9,6 +9,7 @@ import {
   getDeliveryStatusText,
   getLastOrder,
   getOrderById,
+  getOrderSummaryLines,
 } from "@/lib/order-store";
 
 export const Route = createFileRoute("/order-confirmation")({
@@ -70,6 +71,10 @@ function OrderConfirmationPage() {
                 label={t("ui.paymentMethod")}
                 value={t(`checkout.payment.${order.paymentMethod}`)}
               />
+              <InfoCard
+                label={t("dashboard.dateColumn")}
+                value={new Date(order.createdAt).toLocaleString()}
+              />
             </div>
 
             <div className="mt-6">
@@ -106,8 +111,13 @@ function OrderConfirmationPage() {
             </div>
 
             <div className="mt-5 space-y-3 text-sm">
-              <SummaryRow label={t("cart.subtotal")} value={formatRWF(order.subtotal)} />
-              <SummaryRow label={t("cart.total")} value={formatRWF(order.total)} />
+              {getOrderSummaryLines(order).map((line) => (
+                <SummaryRow
+                  key={line.label}
+                  label={t(line.label)}
+                  value={line.value === "cart.free" ? t("cart.free") : line.value}
+                />
+              ))}
             </div>
 
             <div className="mt-6 grid gap-3">

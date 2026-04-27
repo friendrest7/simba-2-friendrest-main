@@ -15,7 +15,7 @@ export const Route = createFileRoute("/checkout")({
 });
 
 function CheckoutPage() {
-  const { items, subtotal, count, checkout } = useCart();
+  const { items, subtotal, deliveryFee, total, count, checkout } = useCart();
   const { t } = useI18n();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -25,6 +25,7 @@ function CheckoutPage() {
     customerName: "",
     phoneNumber: "",
     deliveryLocation: "",
+    momoNumber: "",
   });
   const normalizedPhoneNumber = formData.phoneNumber.replace(/[^\d+]/g, "");
 
@@ -56,12 +57,18 @@ function CheckoutPage() {
       return;
     }
 
+    if (paymentMethod === "mobile-money" && !formData.momoNumber.trim()) {
+      setError(t("checkout.error.momo"));
+      return;
+    }
+
     setLoading(true);
     const result = await checkout({
       customerName: formData.customerName.trim(),
       phoneNumber: normalizedPhoneNumber,
       deliveryLocation: formData.deliveryLocation.trim(),
       paymentMethod,
+      momoNumber: paymentMethod === "mobile-money" ? formData.momoNumber.trim() : undefined,
     });
     setLoading(false);
 
@@ -168,6 +175,21 @@ function CheckoutPage() {
                 hint={t("checkout.cashOnDeliveryHint")}
               />
             </div>
+            {paymentMethod === "mobile-money" && (
+              <div className="mt-4">
+                <Field
+                  id="momo-number"
+                  label={t("ui.mobileMoneyNumber")}
+                  value={formData.momoNumber}
+                  onChange={(value) =>
+                    setFormData((current) => ({ ...current, momoNumber: value }))
+                  }
+                  type="tel"
+                  inputMode="tel"
+                  placeholder={t("signin.phonePh")}
+                />
+              </div>
+            )}
           </section>
         </div>
 
@@ -191,11 +213,17 @@ function CheckoutPage() {
           </div>
           <div className="mt-5 space-y-2.5 text-sm">
             <SummaryRow label={t("cart.subtotal")} value={formatRWF(subtotal)} />
-            <SummaryRow label={t("cart.delivery")} value={t("cart.free")} />
+            <SummaryRow
+              label={t("cart.delivery")}
+              value={deliveryFee === 0 ? t("cart.free") : formatRWF(deliveryFee)}
+            />
           </div>
           <div className="mt-4 flex items-baseline justify-between border-t border-border pt-4">
             <span className="font-semibold">{t("cart.total")}</span>
-            <span className="text-2xl font-black text-primary">{formatRWF(subtotal)}</span>
+            <span className="text-2xl font-black text-primary">{formatRWF(total)}</span>
+          </div>
+          <div className="mt-4 rounded-2xl border border-primary/15 bg-primary/6 p-4 text-sm text-muted-foreground">
+            {t("checkout.orderSummaryHint")}
           </div>
           {error && (
             <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">

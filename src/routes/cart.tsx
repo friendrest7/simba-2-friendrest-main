@@ -12,19 +12,33 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
-  const { items, subtotal, count, setQty, remove, selectedBranch, overLimitItems, stockOf } =
-    useCart();
+  const {
+    items,
+    subtotal,
+    deliveryFee,
+    total,
+    count,
+    setQty,
+    remove,
+    selectedBranch,
+    overLimitItems,
+    stockOf,
+  } = useCart();
   const { t } = useI18n();
 
   if (count === 0) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center">
-        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 shadow-lg shadow-primary/10">
           <ShoppingBag className="h-10 w-10 text-primary" />
         </div>
         <h1 className="text-3xl font-extrabold">{t("cart.empty")}</h1>
         <p className="mt-2 text-muted-foreground">{t("cart.emptyHint")}</p>
-        <Button asChild size="lg" className="mt-6 rounded-full">
+        <div className="mx-auto mt-6 max-w-md rounded-[1.75rem] border border-border bg-card p-6 shadow-sm">
+          <div className="text-sm font-semibold text-foreground">{t("ui.orderSummary")}</div>
+          <p className="mt-2 text-sm text-muted-foreground">{t("checkout.orderSummaryHint")}</p>
+        </div>
+        <Button asChild size="lg" className="mt-6 rounded-full gradient-brand text-brand-foreground">
           <Link to="/products">{t("cart.continue")}</Link>
         </Button>
       </div>
@@ -79,11 +93,14 @@ function CartPage() {
           </div>
           <div className="space-y-2.5 text-sm">
             <Row label={t("cart.subtotal")} value={formatRWF(subtotal)} />
-            <Row label={t("cart.delivery")} value={t("cart.free")} />
+            <Row
+              label={t("cart.delivery")}
+              value={deliveryFee === 0 ? t("cart.free") : formatRWF(deliveryFee)}
+            />
           </div>
           <div className="mt-4 flex items-baseline justify-between border-t border-border pt-4 font-bold">
             <span>{t("cart.total")}</span>
-            <span className="text-2xl tabular-nums text-primary">{formatRWF(subtotal)}</span>
+            <span className="text-2xl tabular-nums text-primary">{formatRWF(total)}</span>
           </div>
           <Button
             asChild

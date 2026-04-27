@@ -86,7 +86,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-border/60 py-4 text-center text-xs text-muted-foreground">
-        Copyright {new Date().getFullYear()} Simba Supermarket. {t("footer.rights")}
+        Simba Supermarket {new Date().getFullYear()} · {t("footer.rights")}
       </div>
     </footer>
   );
