@@ -1,6 +1,7 @@
 import { Outlet, createRootRoute, Link } from "@tanstack/react-router";
 import { ThemeProvider } from "@/lib/theme";
 import { I18nProvider, translate, type Lang } from "@/lib/i18n";
+import { CurrencyProvider } from "@/lib/currency";
 import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/lib/auth";
 import { Header } from "@/components/Header";
@@ -89,18 +90,20 @@ function RootComponent() {
   return (
     <ThemeProvider>
       <I18nProvider>
-        <AuthProvider>
-          <CartProvider>
-            <div className="flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">
-                <Outlet />
-              </main>
-              <Footer />
-            </div>
-            <Toaster richColors position="top-center" />
-          </CartProvider>
-        </AuthProvider>
+        <CurrencyProvider>
+          <AuthProvider>
+            <CartProvider>
+              <div className="flex min-h-screen flex-col">
+                <Header />
+                <main className="flex-1">
+                  <Outlet />
+                </main>
+                <Footer />
+              </div>
+              <Toaster richColors position="top-center" />
+            </CartProvider>
+          </AuthProvider>
+        </CurrencyProvider>
       </I18nProvider>
     </ThemeProvider>
   );

@@ -2,17 +2,20 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme, ACCENTS } from "@/lib/theme";
+import { CURRENCY_OPTIONS, useCurrency } from "@/lib/currency";
 import { useI18n, LANGS, type Lang } from "@/lib/i18n";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
 import { PICKUP_BRANCHES, type BranchName } from "@/lib/demo-store";
 import { getBranchMapUrl } from "@/lib/branchLocations";
+import { formatRWF } from "@/lib/products";
 import { MapPin, Moon, Search, ShoppingBag, Sun, User as UserIcon } from "lucide-react";
 import { useState } from "react";
 import logoImage from "@/assets/logo1.png";
 
 export function Header() {
   const { theme, toggle, accent, setAccent } = useTheme();
+  const { currency, setCurrency } = useCurrency();
   const { t, lang, setLang } = useI18n();
   const { count, subtotal, selectedBranch, setSelectedBranch } = useCart();
   const { user, signOut } = useAuth();
@@ -122,6 +125,18 @@ export function Header() {
               <option key={themeAccent.id} value={themeAccent.id}>
                 {t(`accent.${themeAccent.id}`)}
               </option>
+              ))}
+            </select>
+          <select
+            aria-label="Currency"
+            value={currency}
+            onChange={(event) => setCurrency(event.target.value as (typeof CURRENCY_OPTIONS)[number]["code"])}
+            className="h-10 rounded-xl border border-white/25 bg-background/95 px-3 text-sm font-semibold text-foreground"
+          >
+            {CURRENCY_OPTIONS.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.label}
+              </option>
             ))}
           </select>
           <Button
@@ -176,13 +191,7 @@ export function Header() {
               )}
             </div>
             <span className="hidden font-bold tabular-nums sm:inline">
-              {subtotal > 0
-                ? new Intl.NumberFormat("en-RW", {
-                    style: "currency",
-                    currency: "RWF",
-                    maximumFractionDigits: 0,
-                  }).format(subtotal)
-                : t("nav.cart")}
+              {subtotal > 0 ? formatRWF(subtotal) : t("nav.cart")}
             </span>
           </Link>
         </Button>
@@ -222,6 +231,18 @@ export function Header() {
               {LANGS.map((language) => (
                 <option key={language.code} value={language.code}>
                   {language.flag}
+                </option>
+                ))}
+            </select>
+            <select
+              aria-label="Currency"
+              value={currency}
+              onChange={(event) => setCurrency(event.target.value as (typeof CURRENCY_OPTIONS)[number]["code"])}
+              className="h-9 rounded-xl border border-white/25 bg-background/95 px-3 text-sm font-semibold text-foreground"
+            >
+              {CURRENCY_OPTIONS.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.code}
                 </option>
               ))}
             </select>

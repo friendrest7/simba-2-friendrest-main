@@ -1,4 +1,5 @@
 import data from "@/data/simba_products.json";
+import { CURRENCY_RATES, getCurrentCurrency } from "@/lib/currency";
 import type { LucideIcon } from "lucide-react";
 import {
   Apple,
@@ -164,12 +165,19 @@ export const productDescription = (product: Product, t?: (key: string) => string
   return `${intro} ${product.name} comes in ${product.unit.toLowerCase()} packaging under ${product.category.toLowerCase()}.`;
 };
 
-export const formatRWF = (n: number) =>
-  new Intl.NumberFormat("en-RW", {
+export const formatRWF = (n: number) => {
+  const currency = getCurrentCurrency();
+  const converted = n * CURRENCY_RATES[currency];
+  const locale =
+    currency === "USD" ? "en-US" : currency === "EUR" ? "fr-FR" : currency === "GBP" ? "en-GB" : "en-RW";
+  const maximumFractionDigits = currency === "RWF" ? 0 : 2;
+
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "RWF",
-    maximumFractionDigits: 0,
-  }).format(n);
+    currency,
+    maximumFractionDigits,
+  }).format(converted);
+};
 
 export const searchProducts = (q: string) => {
   const term = q.trim().toLowerCase();
